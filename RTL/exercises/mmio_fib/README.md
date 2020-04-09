@@ -1,4 +1,4 @@
-# MMIO_ADD Exercise
+# MMIO_FIB Exercise
 
 License Statement:  GPL Version 3
 ---------------------------------
@@ -19,9 +19,8 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 
 # Introduction
 
-This example illustruates a simple AFU that implements an adder. Software
-running on the host processor sends inputs to the adder and reads outputs from
-the adder over MMIO. 
+This example illustruates a simple AFU that implements a Fibonacci calculator. 
+Software running on the host processor sends...ADDLATER.
 
 [Click ADDLATER for a video explantation of exercise and the solution]().
 
