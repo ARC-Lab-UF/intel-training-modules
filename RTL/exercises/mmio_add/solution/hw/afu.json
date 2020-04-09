@@ -1,0 +1,18 @@
+{
+   "version": 1,
+   "afu-image": {
+      "power": 0,
+      "afu-top-interface":
+         {
+            "class": "ccip_std_afu"
+         },
+      "accelerator-clusters":
+         [
+            {
+               "name": "mmio_add",
+               "total-contexts": 1,
+               "accelerator-type-uuid": "00dad355-d4ad-463c-9574-27e49461288f"
+            }
+         ]
+   }
+}
