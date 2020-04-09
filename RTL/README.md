@@ -11,7 +11,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - [Slides](examples/ccip_mmio/intel_pac_rtl_ccip.pptx)
 3. [Exercise: mmio_add](exercises/mmio_add)
     - [Video ADDLATER]()
-4. Exercise: mmio_fib
+4. [Exercise: mmio_fib](exercises/mmio_fib)
     - [Video ADDLATER]()
 5. Exercise: mmio_ram
     - [Video ADDLATER]()
