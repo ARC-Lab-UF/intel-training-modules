@@ -2,5 +2,10 @@ This respository provides training modules explaining how to design applications
 
 Currently the repository includes explanations for writing RTL code, combined with C++, but will eventually be expanded to explain other design-entry methods including OpenCL and OpenVINO.
 
-[For the RTL AFU and OPAE explanation, see the RTL/ directory.](RTL/)
+# Training Modules
+
+Here is an [overview of the Intel PAC](https://youtu.be/14cGHio8ml4), along with the [corresponding slides](intel_pac_overview.pptx).
+
+1. [Register-transfer-level (RTL) training](RTL/)
+
 
