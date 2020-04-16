@@ -4,7 +4,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 
 # Suggested Study Order
 
-1. [Video: Intel PAC Overview](https://youtu.be/14cGHio8ml4)
+1. [Video: Intel PAC Overview](https://youtu.be/B8j0-N6tzV0)
     - [Slides](../intel_pac_overview.pptx)    
 2. [Example: ccip_mmio](examples/ccip_mmio)
     - [Video](https://www.youtube.com/watch?v=e03xuTsQ4fQ)
