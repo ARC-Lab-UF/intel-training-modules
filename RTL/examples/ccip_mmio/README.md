@@ -33,9 +33,9 @@ easier to get started.
 
 # Explanation
 
-[Slides are included to explain CCI-P and the corresonding SystemVerilog code](./intel_pac_rtl_ccip.pptx).
+[Slides that explain CCI-P and the corresonding SystemVerilog code](./intel_pac_rtl_ccip.pptx).
 
-A video presentation of the slides is available at ADDLATER.
+[A video presentation of the slides](https://youtu.be/e03xuTsQ4fQ)
 
 
 # Simulation with ASE:
