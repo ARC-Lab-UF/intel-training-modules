@@ -4,7 +4,7 @@ Currently the repository includes explanations for writing RTL code, combined wi
 
 # Training Modules
 
-Here is an [overview of the Intel PAC](https://youtu.be/14cGHio8ml4), along with the [corresponding slides](intel_pac_overview.pptx).
+Here is an [overview of the Intel PAC](https://youtu.be/B8j0-N6tzV0), along with the [corresponding slides](intel_pac_overview.pptx).
 
 1. [Register-transfer-level (RTL) training](RTL/)
 
