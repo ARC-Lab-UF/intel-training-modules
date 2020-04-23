@@ -10,12 +10,12 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - [Video: CCI-P Explanation](https://www.youtube.com/watch?v=e03xuTsQ4fQ), [Slides](examples/ccip_mmio/intel_pac_rtl_ccip.pptx)
     - [Video: ccip_mmio RTL Code Demonstration](https://www.youtube.com/watch?v=3WXo1qzYTvs)
     - [Video: ccip_mmio SW Code Demonstration](https://www.youtube.com/watch?v=Qed4ooAeepw)
-    
-3. [Exercise: mmio_add](exercises/mmio_add)    
+3. [Video: Intel ASE (AFU Simulation Evironment) Demonstration](https://youtu.be/HI2gSz_MXjc)    
+4. [Exercise: mmio_add](exercises/mmio_add)    
     - Description: Simple AFU adder with memory-mapped input and output registers that can be accessed from C++ software.
-4. [Exercise: mmio_fib](exercises/mmio_fib)
+5. [Exercise: mmio_fib](exercises/mmio_fib)
     - Description: Fibonacci calculator AFU that communicates with software over MMIO to receive inputs, signal completion, and provide outputs.    
-5. Exercise: mmio_ram
+6. Exercise: mmio_ram
     - Descrition: ADDLATER
 
 # DevCloud Instructions
