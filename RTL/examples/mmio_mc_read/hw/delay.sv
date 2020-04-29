@@ -50,7 +50,7 @@ module delay
     output logic [WIDTH-1:0] data_out
     );
 
-   initial:
+   initial
      acp: assert(CYCLES > 0);
          
    
