@@ -50,29 +50,29 @@ module delay
     output logic [WIDTH-1:0] data_out
     );
 
-   if (CYCLES < 1) begin
-      $error("Delay must have positive CYCLES parameter.");
-   end
-   else begin
-      logic [WIDTH-1:0] 	     regs[CYCLES];
-      
-      always_ff @(posedge clk or posedge rst) begin
-	 if (rst) begin
-	    for (int i=0; i < CYCLES; i++) begin
-	       regs[i] <= INIT_VAL;		 
-	    end	   
-	 end
-	 else begin
-	    if (en) begin
-	       regs[0] <= data_in;
-	       for (int i=0; i < CYCLES-1; i++) begin
-		  regs[i+1] <= regs[i];		 
-	       end	      
-	    end
+   initial:
+     acp: assert(CYCLES > 0);
+         
+   
+   logic [WIDTH-1:0] 	     regs[CYCLES];
+   
+   always_ff @(posedge clk or posedge rst) begin
+      if (rst) begin
+	 for (int i=0; i < CYCLES; i++) begin
+	    regs[i] <= INIT_VAL;		 
+	 end	   
+      end
+      else begin
+	 if (en) begin
+	    regs[0] <= data_in;
+	    for (int i=0; i < CYCLES-1; i++) begin
+	       regs[i+1] <= regs[i];		 
+	    end	      
 	 end
       end
-
-      assign data_out = regs[CYCLES-1];
    end
+
+   assign data_out = regs[CYCLES-1];
+   
    
 endmodule
