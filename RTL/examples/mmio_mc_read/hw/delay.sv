@@ -44,8 +44,8 @@ module delay
     )
    (
     input 		     clk,
-    input 		     rst = 0,
-    input 		     en = 1,
+    input logic		     rst = 0,
+    input logic		     en = 1,
     input [WIDTH-1:0] 	     data_in,
     output logic [WIDTH-1:0] data_out
     );
