@@ -28,14 +28,9 @@
 // ***************************************************************************
 
 // Module Name:  afu.sv
-// Project:      ccip_mmio
-// Description:  Implements an AFU with a single memory-mapped user register to demonstrate
-//               memory-mapped I/O (MMIO) using the Core Cache Interface Protocol (CCI-P).
-//
-//               This module provides a simplified AFU interface since not all the functionality 
-//               of the ccip_std_afu interface is required. Specifically, the afu module provides
-//               a single clock, simplified port names, and all I/O has already been registered,
-//               which is required by any AFU.
+// Project:      mmio_mc_read
+// Description:  Implements an AFU with multiple memory-mapped registers, and a a memory-
+//               mapped block RAM.
 //
 // For more information on CCI-P, see the Intel Acceleration Stack for Intel Xeon CPU with 
 // FPGAs Core Cache Interface (CCI-P) Reference Manual
@@ -54,6 +49,24 @@ module afu
    output t_if_ccip_Tx tx
    );
 
+   // Local constants
+   localparam int NUM_CSR = 4;
+   localparam int CSR_BASE_MMIO_ADDR = 16'h0020;
+   localparam int CSR_DATA_WIDTH = 64;
+
+   localparam int BRAM_RD_LATENCY = 3;
+   localparam int BRAM_WORDS = 512;
+   localparam int BRAM_ADDR_WIDTH = $clog2(BRAM_WORDS);
+   localparam int BRAM_DATA_WIDTH = 64;
+   localparam int BRAM_BASE_MMIO_ADDR = 16'h0030;
+   localparam int BRAM_UPPER_MMIO_ADDR = BRAM_BASE_MMIO_ADDR + BRAM_WORDS*2;
+
+   // Make sure the configuration does result in the CSRs conflicting with the
+   // BRAM address space.
+   if (NUM_CSR >= (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2) begin
+      $error("CSR addresses conflit with BRAM addresses");
+   end       
+   
    // The AFU must respond with its AFU ID in response to MMIO reads of the CCI-P device feature 
    // header (DFH).  The AFU ID is a unique ID for a given program. Here we generated one with 
    // the "uuidgen" program and stored it in the AFU's JSON file. ASE and synthesis setup scripts
@@ -61,37 +74,46 @@ module afu
    // within afu_json_info.vh.
    logic [127:0] afu_id = `AFU_ACCEL_UUID;
 
-   // 4 user registers (memory mapped to address h0020, 0022, 0024, 0026)
-   logic [63:0]  user_reg;
+   // 4 user registers (memory mapped to addresses h0020, 0022, 0024, 0026)
+   logic [CSR_DATA_WIDTH-1:0] user_reg;
 
    logic 	 bram_wr_en;
-   logic [8:0] 	 bram_wr_addr;
-   logic [8:0] 	 bram_rd_addr;
-   logic [63:0]  bram_rd_data;
+   logic [$clog2(BRAM_WORDS)-1:0] bram_wr_addr, bram_rd_addr;
+   logic [BRAM_DATA_WIDTH-1:0]  bram_rd_data;
    logic [15:0]  offset_addr;
    logic [15:0]  addr_delayed;
       
    // Create a memory-mapped block RAM with 512 words (2^9) and 64-bit words.
    // Address 0 of the BRAM corresponds to MMIO address h0030, address 1 is 0032, etc.
    bram #(
-	  .data_width(64),
-	  .addr_width(9)
+	  .data_width(BRAM_DATA_WIDTH),
+	  .addr_width(BRAM_ADDR_WIDTH)
 	  )
    mmio_bram (
 	      .clk(clk),
 	      .wr_en(bram_wr_en),
 	      .wr_addr(bram_wr_addr),
-	      .wr_data(rx.c0.data[63:0]),
+	      .wr_data(rx.c0.data[BRAM_DATA_WIDTH-1:0]),
 	      .rd_addr(bram_rd_addr),
 	      .rd_data(bram_rd_data)
 	      );
-   
+
+   // Combinational logic to compute the corresponding bram_wr_addr and bram_wr_en
    always_comb
      begin
-        offset_addr = mmio_hdr.address - 16'h0030;    
-	bram_wr_addr = offset_addr[9:1];
+	// Subtract the BRAM address offset from the MMIO address to align the
+	// MMIO addresses with the BRAM words.
+	// e.g. MMIO address h0030 = BRAM address 0
+        offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR; 
 
-	if (rx.c0.mmioWrValid && (mmio_hdr.address >= 16'h0030 && mmio_hdr.address < 16'h0430))
+	// Divide the offset address by two to account for the BRAM being
+	// 64-bit word addressable and MMIO using 32-bit word addressable
+	// e.g. MMIO address h0032 => offest_addr 2 => bram_wr_addr 1 
+	bram_wr_addr = offset_addr[BRAM_ADDR_WIDTH:1];
+
+	// Write to the block RAM when there is a MMIO write request and the address falls
+	// within the range of the BRAM
+	if (rx.c0.mmioWrValid && (mmio_hdr.address >= BRAM_BASE_MMIO_ADDR && mmio_hdr.address <= BRAM_UPPER_MMIO_ADDR ))
 	  bram_wr_en = 1;
 	else
 	  bram_wr_en = 0;	
@@ -123,16 +145,19 @@ module afu
 	     // This isn't necessary, but is done in this example to make illustrate
 	     // how to handle multi-cycle reads. When combined with the block RAM's
 	     // 1-cycle latency, and the registered output, each read takes 3 cycles.     
-	     bram_rd_addr <= offset_addr[9:1];
+	     bram_rd_addr <= offset_addr[BRAM_ADDR_WIDTH:1];
 	     	     
              // Check to see if there is a valid write being received from the processor.
              if (rx.c0.mmioWrValid == 1)
                begin
+		  logic [15:0] stuff;
+		  
+		  
 		  // Check the address of the write request. If it maches the address of the
 		  // memory-mapped register (h0020), then write the received data on channel c0 
 		  // to the register.
                   case (mmio_hdr.address)
-                    16'h0020: user_reg <= rx.c0.data[63:0];
+                    16'h0020: user_reg <= rx.c0.data[CSR_DATA_WIDTH-1:0];
                   endcase
                end
           end
@@ -141,8 +166,8 @@ module afu
    // Delay the transaction ID by the latency of the block RAM read.
    delay 
      #(
-       .cycles(3),
-       .width(9)
+       .cycles(BRAM_RD_LATENCY),
+       .width($size(mmio_hdr.tid))
        )
    delay_tid 
      (
@@ -154,8 +179,8 @@ module afu
    // Delay the read response by the latency of the block RAM read.
    delay 
      #(
-       .cycles(3),
-       .width(1)	   
+       .cycles(BRAM_RD_LATENCY),
+       .width($size(rx.c0.mmioRdValid))	   
        )
    delay_valid 
      (
@@ -164,13 +189,13 @@ module afu
       .data_out(tx.c2.mmioRdValid)	      
       );
 
-   logic [63:0] reg_rd_data, reg_rd_data_delayed;
+   logic [CSR_DATA_WIDTH-1:0] reg_rd_data, reg_rd_data_delayed;
       
    // Delay the register read data by the latency of the block RAM read.
    delay 
      #(
-       .cycles(3),
-       .width(64)	   
+       .cycles(BRAM_RD_LATENCY),
+       .width($size(reg_rd_data))	   
        )
    delay_reg_data 
      (
@@ -182,8 +207,8 @@ module afu
    // Delay the read address by the latency of the block RAM read.
    delay 
      #(
-       .cycles(3),
-       .width(16)	   
+       .cycles(BRAM_RD_LATENCY),
+       .width($size(mmio_hdr.address))	   
        )
    delay_addr 
      (
@@ -196,7 +221,7 @@ module afu
    // on the delayed address.
    always_comb 
      begin
-	if (addr_delayed < 16'h0030) begin
+	if (addr_delayed < BRAM_BASE_MMIO_ADDR) begin
 	   tx.c2.data = reg_rd_data_delayed;
 	end
 	else begin
