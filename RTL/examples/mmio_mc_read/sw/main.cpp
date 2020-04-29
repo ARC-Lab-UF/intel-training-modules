@@ -42,7 +42,10 @@ using namespace std;
 // the addresses match between the RTL code and software code.
 //=========================================================
 #define USER_REG_ADDR 0x0020
-#define BRAM_ADDR 0x0030
+#define NUM_CSR 16
+
+#define BRAM_ADDR 0x0080
+#define BRAM_WORDS 512
 
 
 int main(int argc, char *argv[]) {
@@ -54,22 +57,39 @@ int main(int argc, char *argv[]) {
     AFU afu(AFU_ACCEL_UUID);
     
     unsigned errors = 0;
-    for (uint64_t i=0; i < 1; i++) {
-      afu.write(USER_REG_ADDR+i*2, USER_REG_ADDR+i*2);
-      uint64_t result = afu.read(USER_REG_ADDR+i*2);
+    uint64_t csr[NUM_CSR];
 
-      if (result != USER_REG_ADDR+i*2) {
-	cerr << "ERROR: Read from MMIO register has incorrect value " << result << " instead of " << i << endl;
+    // Write a random value to each CSR.
+    for (unsigned i=0; i < NUM_CSR; i++) {
+      
+      csr[i] = rand();
+      afu.write(USER_REG_ADDR+i*2, csr[i]);
+    }
+
+    // Read the CSR values back and verify correctness.
+    for (unsigned i=0; i < NUM_CSR; i++) {
+      
+      uint64_t result = afu.read(USER_REG_ADDR+i*2);
+      if (result != csr[i]) {
+	cerr << "ERROR: Read from MMIO register has incorrect value " << result << " instead of " << csr[i] << endl;
 	errors ++;
       }
     }
 
-    for (uint64_t i=0; i < 512; i++) {
-      afu.write(BRAM_ADDR+i*2, BRAM_ADDR+i*2);
-      uint64_t result = afu.read(BRAM_ADDR+i*2);
+    uint64_t bram[BRAM_WORDS];
+    
+    // Write random values to every block RAM location.
+    for (unsigned i=0; i < BRAM_WORDS; i++) {      
+      bram[i] = rand();
+      afu.write(BRAM_ADDR+i*2, bram[i]);
+    }
 
-      if (result != BRAM_ADDR+i*2) {
-	cerr << "ERROR: Read from MMIO BRAM has incorrect value " << result << " instead of " << i << endl;
+    // Read the block RAM values back and verify correctness.
+    for (unsigned i=0; i < BRAM_WORDS; i++) {
+      
+      uint64_t result = afu.read(BRAM_ADDR+i*2);
+      if (result != bram[i]) {
+	cerr << "ERROR: Read from MMIO BRAM has incorrect value " << result << " instead of " << csr[i] << endl;
 	errors ++;
       }
     }
