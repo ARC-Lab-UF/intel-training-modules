@@ -44,16 +44,15 @@ module delay
     )
    (
     input 		     clk,
-    input logic		     rst = 0,
-    input logic		     en = 1,
+    input logic		     rst,
+    input logic		     en,
     input [WIDTH-1:0] 	     data_in,
     output logic [WIDTH-1:0] data_out
     );
 
    initial
      acp: assert(CYCLES > 0);
-         
-   
+            
    logic [WIDTH-1:0] 	     regs[CYCLES];
    
    always_ff @(posedge clk or posedge rst) begin

@@ -49,8 +49,8 @@ module afu
    // CSR_DATA_WIDTH: Data width of the CSRs (in bits)
    // ============================================================= 
    localparam int NUM_CSR = 16; 
-   localparam int CSR_BASE_MMIO_ADDR = 16'h0020;
-   localparam int CSR_UPPER_MMIO_ADDR = CSR_BASE_MMIO_ADDR + NUM_CSR*2 - 2;
+   localparam [15:0] CSR_BASE_MMIO_ADDR = 16'h0020;
+   localparam [15:0] CSR_UPPER_MMIO_ADDR = CSR_BASE_MMIO_ADDR + NUM_CSR*2 - 2;
    localparam int CSR_DATA_WIDTH = 64;
 
    // =============================================================
@@ -70,17 +70,19 @@ module afu
    localparam int BRAM_WORDS = 512;
    localparam int BRAM_ADDR_WIDTH = $clog2(BRAM_WORDS);
    localparam int BRAM_DATA_WIDTH = 64;
-   localparam int BRAM_BASE_MMIO_ADDR = 16'h0080;
-   localparam int BRAM_UPPER_MMIO_ADDR = BRAM_BASE_MMIO_ADDR + BRAM_WORDS*2 - 2;
+   localparam [15:0] BRAM_BASE_MMIO_ADDR = 16'h0080;
+   localparam [15:0] BRAM_UPPER_MMIO_ADDR = BRAM_BASE_MMIO_ADDR + BRAM_WORDS*2 - 2;
 
    // AFU ID
    localparam [127:0] AFU_ID = `AFU_ACCEL_UUID;
    
    // Make sure the parameter configuration doesn't result in the CSRs 
    // conflicting with the BRAM address space.
-   if (NUM_CSR > (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2)
-     $error("CSR addresses conflict with BRAM addresses");
-   
+   initial begin
+      if (NUM_CSR > (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2)
+	$error("CSR addresses conflict with BRAM addresses");
+   end
+      
    // Get the MMIO header by casting the overloaded rx.c0.hdr port.
    t_ccip_c0_ReqMmioHdr mmio_hdr;
    assign mmio_hdr = t_ccip_c0_ReqMmioHdr'(rx.c0.hdr);
@@ -131,15 +133,22 @@ module afu
 	// The divide by two accounts for the fact that each MMIO is
 	// 32-bit word addressable, but registers are 64 bits.
 	// e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index of 1.
-	csr_index = (mmio_hdr.address - CSR_BASE_MMIO_ADDR)/2;
+	logic [$size(mmio_hdr.address)-1:0] csr_offset_addr;
+	logic [$size(mmio_hdr.address)-1:0] bram_offset_addr;
 	
+	csr_offset_addr = mmio_hdr.address - CSR_BASE_MMIO_ADDR;
+	csr_index = csr_offset_addr[$size(csr_index):1];
+		
 	// Subtract the BRAM address offset from the MMIO address to align the
 	// MMIO addresses with the BRAM words. The divide by two accounts for
 	// MMIO being 32-bit word addressable and the block RAM being 64-bit word
 	// addressable.
 	// e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
 	// e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1
-        bram_addr = (mmio_hdr.address - BRAM_BASE_MMIO_ADDR)/2;
+	
+
+	bram_offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR;	
+        bram_addr = bram_offset_addr[$size(bram_addr):1];
 
 	// Define the bram write address.
 	bram_wr_addr = bram_addr;
@@ -201,6 +210,8 @@ module afu
         tx.c1.valid  = '0;
         tx.c0.hdr    = '0;
         tx.c0.valid  = '0;
+
+	reg_rd_data = 64'h0;
         
 	// If there is a read request from the processor, handle that request.
         if (rx.c0.mmioRdValid == 1'b1)
@@ -239,12 +250,9 @@ module afu
       	       
                default:
 		 // Verify the read address is within the CSR range.
-		 // If so, provide the corresponding CSR, otherwise provide
-		 // a zero for undefined CSR addresses
+		 // If so, provide the corresponding CSR		 
 		 if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR)
 		    reg_rd_data = csr[csr_index];		    
-	         else 
-		    reg_rd_data = 64'h0;
              endcase
           end
      end // always_comb
@@ -266,6 +274,7 @@ module afu
    delay_tid 
      (
       .*,
+      .en('1),
       .data_in(mmio_hdr.tid),
       .data_out(tx.c2.hdr.tid)	      
       );
@@ -279,6 +288,7 @@ module afu
    delay_valid 
      (
       .*,
+      .en('1),
       .data_in(rx.c0.mmioRdValid),
       .data_out(tx.c2.mmioRdValid)	      
       );
@@ -292,6 +302,7 @@ module afu
    delay_reg_data 
      (
       .*,
+      .en('1),
       .data_in(reg_rd_data),
       .data_out(reg_rd_data_delayed)	      
       );
@@ -305,6 +316,7 @@ module afu
    delay_addr 
      (
       .*,
+      .en('1),
       .data_in(mmio_hdr.address),
       .data_out(addr_delayed)	      
       );
