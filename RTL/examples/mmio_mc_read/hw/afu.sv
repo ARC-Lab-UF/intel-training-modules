@@ -91,7 +91,7 @@ module afu
         offset_addr = mmio_hdr.address - 16'h0030;    
 	bram_wr_addr = offset_addr[9:1];
 
-	if (rx.c0.mmioWrValid && (mmio_hdr.address >= 16'h0030 && mmio_hdr.address < 16'h0230))
+	if (rx.c0.mmioWrValid && (mmio_hdr.address >= 16'h0030 && mmio_hdr.address < 16'h0430))
 	  bram_wr_en = 1;
 	else
 	  bram_wr_en = 0;	
