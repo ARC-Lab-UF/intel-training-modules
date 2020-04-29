@@ -1,23 +1,62 @@
+// Copyright (c) 2020 University of Florida
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Greg Stitt
+// University of Florida
+
+// Module Name:  bram.sv
+// Description:  Implements a block RAM with a registered output (2-cycle read latency).
+//               The RAM provides old read data during a read&write to the samea address.
+
+//===================================================================
+// Parameter Description
+// DATA_WIDTH : The number of bits in each RAM word.
+// ADDR_WIDTH : The number of bits in each RAM address. Also determines
+//              the number of words in the RAM (2**ADDR_WIDTH).
+//===================================================================
+
+//===================================================================
+// Interface Description
+// clk  : Clock input
+// wr_en : Write enable (active high)
+// wr_addr : Write addr
+// wr_data : Write data
+// rd_addr : Read addr
+// rd_data : Read data
+//===================================================================
+
 module bram
   #(
-    parameter int data_width,
-    parameter int addr_width
+    parameter int DATA_WIDTH,
+    parameter int ADDR_WIDTH
     )
    (
-    input logic 		  clk,
+    input 			  clk,
 
     // Write port
     input 			  wr_en,
-    input [addr_width-1:0] 	  wr_addr,
-    input [data_width-1:0] 	  wr_data,
+    input [ADDR_WIDTH-1:0] 	  wr_addr,
+    input [DATA_WIDTH-1:0] 	  wr_data,
 
     // Read port
-    input [addr_width-1:0] 	  rd_addr,
-    output logic [data_width-1:0] rd_data
+    input [ADDR_WIDTH-1:0] 	  rd_addr,
+    output logic [DATA_WIDTH-1:0] rd_data
     );
    
-   logic [data_width-1:0] 	  mem [2**addr_width];
-   logic [data_width-1:0] 	  mem_data;
+   logic [DATA_WIDTH-1:0] 	  mem [2**ADDR_WIDTH];
+   logic [DATA_WIDTH-1:0] 	  mem_data;
    
    always @ (posedge clk) begin
       if (wr_en) begin

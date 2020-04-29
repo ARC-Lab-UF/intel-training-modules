@@ -1,31 +1,20 @@
-// ***************************************************************************
-// Copyright (c) 2013-2018, Intel Corporation
+// Copyright (c) 2020 University of Florida
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// * Redistributions of source code must retain the above copyright notice,
-// this list of conditions and the following disclaimer.
-// * Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation
-// and/or other materials provided with the distribution.
-// * Neither the name of Intel Corporation nor the names of its contributors
-// may be used to endorse or promote products derived from this software
-// without specific prior written permission.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//
-// ***************************************************************************
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Greg Stitt
+// University of Florida
 
 // Module Name:  afu.sv
 // Project:      mmio_mc_read
@@ -51,13 +40,32 @@ module afu
    output t_if_ccip_Tx tx
    );
 
+   // =============================================================
    // Constants for the memory-mapped registers, aka control/status registers (CSRs)
+   //
+   // NUM_CSR: The number of CSRs. This can be changed and the code will adapt.
+   // CSR_BASE_MMIO_ADDR: MMIO address where the first CSR is mapped
+   // CSR_UPPER_MMIO_ADDR: MMIO address of the last CSR
+   // CSR_DATA_WIDTH: Data width of the CSRs (in bits)
+   // ============================================================= 
    localparam int NUM_CSR = 16; 
    localparam int CSR_BASE_MMIO_ADDR = 16'h0020;
    localparam int CSR_UPPER_MMIO_ADDR = CSR_BASE_MMIO_ADDR + NUM_CSR*2 - 2;
    localparam int CSR_DATA_WIDTH = 64;
 
+   // =============================================================
    // Constants for the memory-mapped block RAM (BRAM)
+   //
+   // BRAM_RD_LATENCY: the read latency of the BRAM. NOTE: this constant cannot
+   //                  be changed without changing the timing of the block RAM.
+   //                  This is solely a named constant to avoid having hardcoded
+   //                  literals throughout the code.
+   // BRAM_WORDS: Number of words in the block RAM.
+   // BRAM_ADDR_WIDTH: The address width of the block RAM.
+   // BRAM_DATA_WIDTH: The data width of each block RAM word.
+   // BRAM_BASE_MMIO_ADDR: MMIO address where the first BRAM word is mapped.
+   // BRAM_UPPER_MMIO_ADDR: MMIO address of the last BRAM word.
+   // ============================================================= 
    localparam int BRAM_RD_LATENCY = 3;
    localparam int BRAM_WORDS = 512;
    localparam int BRAM_ADDR_WIDTH = $clog2(BRAM_WORDS);
@@ -65,20 +73,19 @@ module afu
    localparam int BRAM_BASE_MMIO_ADDR = 16'h0080;
    localparam int BRAM_UPPER_MMIO_ADDR = BRAM_BASE_MMIO_ADDR + BRAM_WORDS*2 - 2;
 
-   // AFU ID changed to a constant in this example
+   // AFU ID
    localparam [127:0] AFU_ID = `AFU_ACCEL_UUID;
    
-   // Make sure the parameter configuration does result in the CSRs conflicting with the
-   // BRAM address space.
-   if (NUM_CSR > (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2) begin
-      $error("CSR addresses conflict with BRAM addresses");
-   end       
+   // Make sure the parameter configuration doesn't result in the CSRs 
+   // conflicting with the BRAM address space.
+   if (NUM_CSR > (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2)
+     $error("CSR addresses conflict with BRAM addresses");
    
-   // Get the MMIO header by casting the overloaded rx.c0.hdr port
+   // Get the MMIO header by casting the overloaded rx.c0.hdr port.
    t_ccip_c0_ReqMmioHdr mmio_hdr;
    assign mmio_hdr = t_ccip_c0_ReqMmioHdr'(rx.c0.hdr);
    
-   // Control/status registers.
+   // Declare control/status registers.
    logic [CSR_DATA_WIDTH-1:0] csr[NUM_CSR];
 
    // The index into the CSRs based on the current address.
@@ -88,21 +95,25 @@ module afu
    logic [$clog2(NUM_CSR)-1:0] csr_index;
 
    // Block RAM signals.
-   // Similarly, $clog2 is used to calculated the width of the address lines
-   // based on the number of words
-   logic bram_wr_en;
-   logic [$clog2(BRAM_WORDS)-1:0] bram_wr_addr, bram_rd_addr;
-   logic [BRAM_DATA_WIDTH-1:0]  bram_rd_data;
+   // Similarly, $clog2 is used here to calculated the width of the address lines
+   // based on the number of words.
+   logic 		       bram_wr_en;
+   logic [$clog2(BRAM_WORDS)-1:0] bram_wr_addr, bram_rd_addr, bram_addr;
+   logic [BRAM_DATA_WIDTH-1:0] 	  bram_rd_data;
+
+   // MMIO address after applying the offset of base MMIO address of the BRAM. 
+   logic [15:0] 		  offset_addr;
+
+   // Variables used for delaying various signals.
+   logic [15:0] 		  addr_delayed;
+   logic [CSR_DATA_WIDTH-1:0] 	  reg_rd_data, reg_rd_data_delayed;
    
-   logic [15:0]  offset_addr;
-   logic [15:0]  addr_delayed;
-      
-   // Create a memory-mapped block RAM with 2^BRAM_ADDR_WIDTH words, where each word is
+   // Insantiate a block RAM with 2^BRAM_ADDR_WIDTH words, where each word is
    // BRAM_DATA_WIDTH bits.
    // Address 0 of the BRAM corresponds to MMIO address BRAM_BASE_MMIO_ADDR.
    bram #(
-	  .data_width(BRAM_DATA_WIDTH),
-	  .addr_width(BRAM_ADDR_WIDTH)
+	  .DATA_WIDTH(BRAM_DATA_WIDTH),
+	  .ADDR_WIDTH(BRAM_ADDR_WIDTH)
 	  )
    mmio_bram (
 	      .clk(clk),
@@ -117,17 +128,21 @@ module afu
    always_comb
      begin
 	// Compute the index of the CSR based on the mmio address.
+	// The divide by two accounts for the fact that each MMIO is
+	// 32-bit word addressable, but registers are 64 bits.
+	// e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index of 1.
 	csr_index = (mmio_hdr.address - CSR_BASE_MMIO_ADDR)/2;
 	
 	// Subtract the BRAM address offset from the MMIO address to align the
-	// MMIO addresses with the BRAM words.
-	// e.g. MMIO address h0030 = BRAM address 0
-        offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR; 
+	// MMIO addresses with the BRAM words. The divide by two accounts for
+	// MMIO being 32-bit word addressable and the block RAM being 64-bit word
+	// addressable.
+	// e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
+	// e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1
+        bram_addr = (mmio_hdr.address - BRAM_BASE_MMIO_ADDR)/2;
 
-	// Divide the offset address by two to account for the BRAM being
-	// 64-bit word addressable and MMIO using 32-bit word addressable
-	// e.g. MMIO address h0032 => offest_addr 2 => bram_wr_addr 1 
-	bram_wr_addr = offset_addr[BRAM_ADDR_WIDTH:1];
+	// Define the bram write address.
+	bram_wr_addr = bram_addr;
 
 	// Write to the block RAM when there is a MMIO write request and the address falls
 	// within the range of the BRAM
@@ -142,7 +157,7 @@ module afu
      begin 
         if (rst) 
 	  begin 
-	     // Asnchronous reset for the memory-mapped register.
+	     // Asynchronous reset for the CSRs.
 	     for (int i=0; i < NUM_CSR; i++) begin
 		csr[i] <= 0;
 	     end		       
@@ -153,8 +168,8 @@ module afu
 	     // This isn't necessary, but is done in this example to make illustrate
 	     // how to handle multi-cycle reads. When combined with the block RAM's
 	     // 1-cycle latency, and the registered output, each read takes 3 cycles.     
-	     bram_rd_addr <= offset_addr[BRAM_ADDR_WIDTH:1];
-	     	     
+	     bram_rd_addr <= bram_addr;
+	     
              // Check to see if there is a valid write being received from the processor.	    
              if (rx.c0.mmioWrValid == 1)
                begin
@@ -166,79 +181,10 @@ module afu
                end
           end
      end
-
-   // Delay the transaction ID by the latency of the block RAM read.
-   // Demonstrates the use of $size to get the number of bits in a variable.
-   // $size is useful when either it isn't convenient to determine the number of
-   // bits in a variable, especially when that amount might change.
-   delay 
-     #(
-       .cycles(BRAM_RD_LATENCY),
-       .width($size(mmio_hdr.tid))
-       )
-   delay_tid 
-     (
-      .*,
-      .data_in(mmio_hdr.tid),
-      .data_out(tx.c2.hdr.tid)	      
-      );
-
-   // Delay the read response by the latency of the block RAM read.
-   delay 
-     #(
-       .cycles(BRAM_RD_LATENCY),
-       .width($size(rx.c0.mmioRdValid))	   
-       )
-   delay_valid 
-     (
-      .*,
-      .data_in(rx.c0.mmioRdValid),
-      .data_out(tx.c2.mmioRdValid)	      
-      );
-
-   logic [CSR_DATA_WIDTH-1:0] reg_rd_data, reg_rd_data_delayed;
-      
-   // Delay the register read data by the latency of the block RAM read.
-   delay 
-     #(
-       .cycles(BRAM_RD_LATENCY),
-       .width($size(reg_rd_data))	   
-       )
-   delay_reg_data 
-     (
-      .*,
-      .data_in(reg_rd_data),
-      .data_out(reg_rd_data_delayed)	      
-      );
-      
-   // Delay the read address by the latency of the block RAM read.
-   delay 
-     #(
-       .cycles(BRAM_RD_LATENCY),
-       .width($size(mmio_hdr.address))	   
-       )
-   delay_addr 
-     (
-      .*,
-      .data_in(mmio_hdr.address),
-      .data_out(addr_delayed)	      
-      );
-   
-   // Choose either the delayed register data or the block RAM data based
-   // on the delayed address.
-   always_comb 
-     begin
-	if (addr_delayed < BRAM_BASE_MMIO_ADDR) begin
-	   tx.c2.data = reg_rd_data_delayed;
-	end
-	else begin
-	   tx.c2.data = bram_rd_data;	   
-	end;
-     end 
    
    // ============================================================= 		    
-   // MMIO register (i.e. CSR) read code
-   // Unlike the previous example, in this situation we do not use
+   // MMIO CSR read code
+   // Unlike the previous examples, in this situation we do not use
    // an always_ff block because we explicitly do not want registers
    // for these assignments. Instead, we want to define signals that
    // get delayed by the latency of the block RAM so that all reads
@@ -264,11 +210,7 @@ module afu
 	     // from the resource mapped to that address.
              case (mmio_hdr.address)
 	       
-	       // =============================================================
-	       // IMPORTANT: Every AFU must provide the following control status registers 
-	       // mapped to these specific addresses.
-	       // =============================================================   
-	       
+	       // Provide the required AFU header CSRs	       	       
                // AFU header
                16'h0000: reg_rd_data = {
 					4'b0001, // Feature type = AFU
@@ -292,20 +234,88 @@ module afu
                16'h0008: reg_rd_data = 64'h0;
 	       
 	       // =============================================================   
-	       // Define user memory-mapped resources here
+	       // Define user CSRs here
 	       // =============================================================   
       	       
                default:
 		 // Verify the read address is within the CSR range.
-		 // If so, provide the corresponding CSR
-		 if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR) begin
-		    reg_rd_data <= csr[csr_index];		    
-		 end
-	         else begin
-		    // If the processor requests an register address that is unused, return 0.	      	       
+		 // If so, provide the corresponding CSR, otherwise provide
+		 // a zero for undefined CSR addresses
+		 if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR)
+		    reg_rd_data = csr[csr_index];		    
+	         else 
 		    reg_rd_data = 64'h0;
-		 end	       
              endcase
           end
-     end
+     end // always_comb
+
+   // =============================================================   
+   // Delays to align the CSR reads and the block RAM reads.
+   // =============================================================   
+   
+   // Delay the transaction ID by the latency of the block RAM read.
+   // This demonstrates the use of $size to get the number of bits in a variable.
+   // $size is useful because it conveys the purpose, as opposed to just providing
+   // a literal. It is also useful when the corresponding variable may change sizes
+   // in different situations.
+   delay 
+     #(
+       .CYCLES(BRAM_RD_LATENCY),
+       .WIDTH($size(mmio_hdr.tid))
+       )
+   delay_tid 
+     (
+      .*,
+      .data_in(mmio_hdr.tid),
+      .data_out(tx.c2.hdr.tid)	      
+      );
+
+   // Delay the read response by the latency of the block RAM read.
+   delay 
+     #(
+       .CYCLES(BRAM_RD_LATENCY),
+       .WIDTH($size(rx.c0.mmioRdValid))	   
+       )
+   delay_valid 
+     (
+      .*,
+      .data_in(rx.c0.mmioRdValid),
+      .data_out(tx.c2.mmioRdValid)	      
+      );
+   
+   // Delay the register read data by the latency of the block RAM read.
+   delay 
+     #(
+       .CYCLES(BRAM_RD_LATENCY),
+       .WIDTH($size(reg_rd_data))	   
+       )
+   delay_reg_data 
+     (
+      .*,
+      .data_in(reg_rd_data),
+      .data_out(reg_rd_data_delayed)	      
+      );
+   
+   // Delay the read address by the latency of the block RAM read.
+   delay 
+     #(
+       .CYCLES(BRAM_RD_LATENCY),
+       .WIDTH($size(mmio_hdr.address))	   
+       )
+   delay_addr 
+     (
+      .*,
+      .data_in(mmio_hdr.address),
+      .data_out(addr_delayed)	      
+      );
+   
+   // Choose either the delayed register data or the block RAM data based
+   // on the delayed address.
+   always_comb 
+     begin
+	if (addr_delayed < BRAM_BASE_MMIO_ADDR) 
+	   tx.c2.data = reg_rd_data_delayed;
+	else
+	   tx.c2.data = bram_rd_data;	   
+     end 
 endmodule
