@@ -44,34 +44,39 @@ module delay
     )
    (
     input 		     clk,
-    input logic		     rst,
-    input logic		     en,
+    input logic 	     rst,
+    input logic 	     en,
     input [WIDTH-1:0] 	     data_in,
     output logic [WIDTH-1:0] data_out
     );
 
-   initial
-     acp: assert(CYCLES > 0);
-            
-   logic [WIDTH-1:0] 	     regs[CYCLES];
-   
-   always_ff @(posedge clk or posedge rst) begin
-      if (rst) begin
-	 for (int i=0; i < CYCLES; i++) begin
-	    regs[i] <= INIT_VAL;		 
-	 end	   
+   generate
+      if (CYCLES == 0) begin
+	 assign data_out = data_in;
+      end
+      else if (CYCLES > 0) begin
+	 
+	 logic [WIDTH-1:0] regs[CYCLES];
+	 
+	 always_ff @(posedge clk or posedge rst) begin
+	    if (rst) begin
+	       for (int i=0; i < CYCLES; i++) 
+		 regs[i] <= INIT_VAL;		 
+	    end
+	    else begin
+	       if (en) begin
+		  regs[0] <= data_in;
+		  for (int i=0; i < CYCLES-1; i++) 
+		    regs[i+1] <= regs[i];
+	       end
+	    end
+	 end
+	 
+	 assign data_out = regs[CYCLES-1];
       end
       else begin
-	 if (en) begin
-	    regs[0] <= data_in;
-	    for (int i=0; i < CYCLES-1; i++) begin
-	       regs[i+1] <= regs[i];		 
-	    end	      
-	 end
+	 $error("Delay CYCLES parameter (%0d) must have positive value.", CYCLES);
       end
-   end
-
-   assign data_out = regs[CYCLES-1];
-   
+   endgenerate
    
 endmodule

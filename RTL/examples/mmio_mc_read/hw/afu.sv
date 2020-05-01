@@ -18,7 +18,7 @@
 
 // Module Name:  afu.sv
 // Project:      mmio_mc_read
-// Description:  Implements an AFU with multiple memory-mapped registers, and a a memory-
+// Description:  Implements an AFU with multiple memory-mapped registers, and a memory-
 //               mapped block RAM. The example expands on the mmio_ccip example to
 //               demonstrate how to handle MMIO reads across multiple cycles, while also
 //               demonstrating suggested design practices to make the code parameterized.
@@ -184,6 +184,12 @@ module afu
                begin
 		  // Verify the address is within the range of CSR addresses.
 		  // If so, store into the corresponding register.
+		  // NOTE: In realistic use cases, many of the CSRs will only be writeable by
+		  // the AFU itself. For example, if a hardware exception occurs during execution,
+		  // the AFU can put an error code into a CSR that software can read.
+		  // In general, all CSRs can be read by software, but only some can be written
+		  // by software. This example allows software writes to all CSRs solely for
+		  // MMIO testing purposes.
 		  if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR) begin
 		     csr[csr_index] <= rx.c0.data[CSR_DATA_WIDTH-1:0];
 		  end		 		  
@@ -310,7 +316,7 @@ module afu
    // Delay the read address by the latency of the block RAM read.
    delay 
      #(
-       .CYCLES(BRAM_RD_LATENCY),
+       .CYCLES(BRAM_RD_LATENCY),       
        .WIDTH($size(mmio_hdr.address))	   
        )
    delay_addr 
@@ -325,6 +331,9 @@ module afu
    // on the delayed address.
    always_comb 
      begin
+	// This code assumes that all block RAM addresses are above CSR
+	// addresses. Although true for the mapping in this example,
+	// this code might have to be changed for a more complex mapping.
 	if (addr_delayed < BRAM_BASE_MMIO_ADDR) 
 	   tx.c2.data = reg_rd_data_delayed;
 	else

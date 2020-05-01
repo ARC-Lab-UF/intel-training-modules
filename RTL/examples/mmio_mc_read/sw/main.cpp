@@ -16,10 +16,10 @@
 // Greg Stitt
 // University of Florida
 //
-// This example demonstrates an AFU wrapper class built around the OPAE API 
-// to do the following:
-// 1) request an FPGA with a specific AFU
-// 2) read and write from a memory-mapped register in the FPGA 
+// This example uses the same AFU wrapper class as previous examples, but
+// writes to a large number of memory-mapped addresses that the AFU implements
+// across both block RAM and registers. For this example, the code uses
+// the term control/status register (CSR) for the memory-mapped registers.
 
 #include <cstdlib>
 #include <iostream>
@@ -34,61 +34,78 @@ using namespace std;
 #include "afu_json_info.h"
 
 //=========================================================
-// Define the address of the memory-mapped register according the address
-// that was used in the RTL code.
+// Define the base address of the memory-mapped registers
+// (i.e. control/status (CSR) registers) and block RAM that 
+// was used in the RTL code.
 //
 // NOTE: Ideally this could be generated with a .json file just like the
 // AFU_ACCEL_UUID. Without auto-generation, you must manually ensure that
 // the addresses match between the RTL code and software code.
 //=========================================================
-#define USER_REG_ADDR 0x0020
+
+// Base MMIO address of the CSRs
+#define CSR_BASE_ADDR 0x0020
+// The total number of CSRs
 #define NUM_CSR 16
 
-#define BRAM_ADDR 0x0080
+// Base MMIO address of the block RAM
+#define BRAM_BASE_ADDR 0x0080
+// Number of 64-bit words in the block RAM
 #define BRAM_WORDS 512
 
 
 int main(int argc, char *argv[]) {
 
   try {
-    // Create an AFU object to provide basic services for the FPGA. The 
-    // constructor searchers available FPGAs for one with an AFU with the
-    // the specified ID
+    // Instantiate the AFU with the corresponding UUID.
     AFU afu(AFU_ACCEL_UUID);
     
     unsigned errors = 0;
     uint64_t csr[NUM_CSR];
 
-    // Write a random value to each CSR.
-    for (unsigned i=0; i < NUM_CSR; i++) {
-      
+    // Write a random value to each CSR and save the values in an array 
+    // NOTE: in many cases, CSRs are only read by software and written by the
+    // FPGA. For example, if some hardware exception occurred in the AFU, the
+    // AFU would set a CSR to reflect that. This example writes to all the 
+    // register solely for MMIO testing purposes.
+    for (unsigned i=0; i < NUM_CSR; i++) {      
       csr[i] = rand();
-      afu.write(USER_REG_ADDR+i*2, csr[i]);
+
+      // The i*2 is needed because each address is for a 32-bit word, and the 
+      // AFU only implemented 64-bit words.
+      // If this extra operation is confusing, you could potentially create
+      // another method in the AFU class (e.g., writeCSR) that does this
+      // operation internally. Intel has reference examples that do exactly
+      // this. I generally prefer to use the same MMIO addresses in software 
+      // that are used in the AFU because when debugging a simulation I don't 
+      // have to do any extra translation. For any realistic example, I use an
+      // enum or #defines that provide meaningful names to all CSRs, so in that
+      // case, the readability is the same in either approach.
+      afu.write(CSR_BASE_ADDR+i*2, csr[i]);
     }
 
     // Read the CSR values back and verify correctness.
-    for (unsigned i=0; i < NUM_CSR; i++) {
-      
-      uint64_t result = afu.read(USER_REG_ADDR+i*2);
+    for (unsigned i=0; i < NUM_CSR; i++) {      
+      uint64_t result = afu.read(CSR_BASE_ADDR+i*2);
       if (result != csr[i]) {
 	cerr << "ERROR: Read from MMIO register has incorrect value " << result << " instead of " << csr[i] << endl;
 	errors ++;
       }
     }
 
-    uint64_t bram[BRAM_WORDS];
-    
-    // Write random values to every block RAM location.
-    for (unsigned i=0; i < BRAM_WORDS; i++) {      
+    // Repeat the same tests but for the block RAM MMIO addresses.
+
+    uint64_t bram[BRAM_WORDS];   
+    // Write random values to the memory-mapped BRAM.
+    for (unsigned i=0; i < BRAM_WORDS; i++) {            
       bram[i] = rand();
-      afu.write(BRAM_ADDR+i*2, bram[i]);
+      afu.write(BRAM_BASE_ADDR+i*2, bram[i]);
     }
 
-    // Read the block RAM values back and verify correctness.
-    for (unsigned i=0; i < BRAM_WORDS; i++) {
-      
-      uint64_t result = afu.read(BRAM_ADDR+i*2);
-      if (result != bram[i]) {
+    // Read the BRAM values back and verify correctness.
+    for (unsigned i=0; i < BRAM_WORDS; i++) {            
+      uint64_t result = afu.read(BRAM_BASE_ADDR+i*2);
+      if (result != bram[i]) {	
 	cerr << "ERROR: Read from MMIO BRAM has incorrect value " << result << " instead of " << csr[i] << endl;
 	errors ++;
       }

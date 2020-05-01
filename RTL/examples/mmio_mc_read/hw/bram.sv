@@ -19,6 +19,10 @@
 // Module Name:  bram.sv
 // Description:  Implements a block RAM with a registered output (2-cycle read latency).
 //               The RAM provides old read data during a read&write to the samea address.
+//
+// For more information on block RAM inference from HDL code, see Intel documentation.
+// There are different styles of inference for different types of RAM resources, and
+// for different read-during-write behaviors.
 
 //===================================================================
 // Parameter Description
@@ -70,5 +74,6 @@ module bram
       // Register the memory output. This isn't necessary for a block RAM but 
       // can often eliminating timing-closure bottlenecks.
       rd_data <= mem_data; 
-   end
+   end // always @ (posedge clk)
+   
 endmodule
