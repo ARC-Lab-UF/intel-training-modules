@@ -129,24 +129,23 @@ module afu
    // Misc. combinatonal logic for addressing and control.
    always_comb
      begin
-	// Compute the index of the CSR based on the mmio address.
-	// The divide by two accounts for the fact that each MMIO is
-	// 32-bit word addressable, but registers are 64 bits.
-	// e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index of 1.
 	logic [$size(mmio_hdr.address)-1:0] csr_offset_addr;
 	logic [$size(mmio_hdr.address)-1:0] bram_offset_addr;
-	
+
+	// Compute the index of the CSR based on the mmio address.
+	// The divide by two (shift right) accounts for the fact that each MMIO is
+	// 32-bit word addressable, but registers are 64 bits.
+	// e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index 1.
+	// e.g. CSR_BASE_MMIO_ADDR+4 maps to csr_index 2
 	csr_offset_addr = mmio_hdr.address - CSR_BASE_MMIO_ADDR;
 	csr_index = csr_offset_addr[$size(csr_index):1];
 		
 	// Subtract the BRAM address offset from the MMIO address to align the
-	// MMIO addresses with the BRAM words. The divide by two accounts for
+	// MMIO addresses with the BRAM words. The divide by two (shift right) accounts for
 	// MMIO being 32-bit word addressable and the block RAM being 64-bit word
 	// addressable.
 	// e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
-	// e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1
-	
-
+	// e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1       
 	bram_offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR;	
         bram_addr = bram_offset_addr[$size(bram_addr):1];
 
