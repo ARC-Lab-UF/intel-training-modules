@@ -18,7 +18,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - Description: Fibonacci calculator AFU that communicates with software over MMIO to receive inputs, signal completion, and provide outputs.    
 7. [Example: mmio_mc_read](examples/mmio_mc_read)
     - Description: Illustrates how to use CCI-P to implement multi-cyle MMIO reads to inferface with resources other than registers.
-    - [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E) 
+    - [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E), [Slides](examples/mmio_mc_read/mmio_mc_read.pptx)
 8. mmio_ram (TO BE ADDED)
     - Description: Illustrates how to use CCI-P to access the host processor's memory from within the AFU.
 
