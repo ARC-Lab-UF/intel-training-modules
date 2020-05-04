@@ -75,7 +75,8 @@ module delay
 	 assign data_out = regs[CYCLES-1];
       end
       else begin
-	 $error("Delay CYCLES parameter (%0d) must have positive value.", CYCLES);
+	 initial
+	   $error("Delay CYCLES parameter (%0d) must have positive value.", CYCLES);	    
       end
    endgenerate
    
