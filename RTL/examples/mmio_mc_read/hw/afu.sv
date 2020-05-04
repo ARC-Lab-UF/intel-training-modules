@@ -52,7 +52,7 @@ module afu
    localparam [15:0] CSR_BASE_MMIO_ADDR = 16'h0020;
    localparam [15:0] CSR_UPPER_MMIO_ADDR = CSR_BASE_MMIO_ADDR + NUM_CSR*2 - 2;
    localparam int CSR_DATA_WIDTH = 64;
-
+   
    // =============================================================
    // Constants for the memory-mapped block RAM (BRAM)
    //
@@ -82,8 +82,8 @@ module afu
       if (NUM_CSR > (BRAM_BASE_MMIO_ADDR-CSR_BASE_MMIO_ADDR)/2)
 	$error("CSR addresses conflict with BRAM addresses");
    end
-      
-   // Get the MMIO header by casting the overloaded rx.c0.hdr port.
+           
+   // Get the MMIO header by casting the overloaded rx.c0.hdr port.   
    t_ccip_c0_ReqMmioHdr mmio_hdr;
    assign mmio_hdr = t_ccip_c0_ReqMmioHdr'(rx.c0.hdr);
    
@@ -94,7 +94,7 @@ module afu
    // $clog2 is a very useful function for computing the number of bits based on an
    // amount. For example, if we have 3 status registers, we would need ceiling(log2(3)) = 2
    // bits to address all the registers.
-   logic [$clog2(NUM_CSR)-1:0] csr_index;
+   logic [$clog2(NUM_CSR)-1:0] csr_index_rd, csr_index_wr;
 
    // Block RAM signals.
    // Similarly, $clog2 is used here to calculated the width of the address lines
@@ -108,10 +108,15 @@ module afu
 
    // Variables used for delaying various signals.
    logic [15:0] 		  addr_delayed;
-   logic [CSR_DATA_WIDTH-1:0] 	  reg_rd_data, reg_rd_data_delayed;
+   logic 			  mmioRdValid_delayed;
    
-   // Insantiate a block RAM with 2^BRAM_ADDR_WIDTH words, where each word is
-   // BRAM_DATA_WIDTH bits.
+   // Instantiate a block RAM with 2^BRAM_ADDR_WIDTH words, where each word is
+   // BRAM_DATA_WIDTH bits. Internally, this block RAM registers the output
+   // which leads to a 2-cycle read latency. However, the address is also
+   // registered below, which results in a 3-cycle read latency. This delay
+   // is largely synthetic for this example to demonstrate multi-cycle reads,
+   // although registered a block RAM output is common.
+   //
    // Address 0 of the BRAM corresponds to MMIO address BRAM_BASE_MMIO_ADDR.
    bram #(
 	  .DATA_WIDTH(BRAM_DATA_WIDTH),
@@ -127,143 +132,136 @@ module afu
 	      );
 
    // Misc. combinatonal logic for addressing and control.
-   always_comb
-     begin
-	logic [$size(mmio_hdr.address)-1:0] csr_offset_addr;
-	logic [$size(mmio_hdr.address)-1:0] bram_offset_addr;
+   always_comb begin
+      
+      logic [$size(mmio_hdr.address)-1:0] csr_offset_addr_wr, csr_offset_addr_rd;
+      logic [$size(mmio_hdr.address)-1:0] bram_offset_addr;
 
-	// Compute the index of the CSR based on the mmio address.
-	// The divide by two (shift right) accounts for the fact that each MMIO is
-	// 32-bit word addressable, but registers are 64 bits.
-	// e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index 1.
-	// e.g. CSR_BASE_MMIO_ADDR+4 maps to csr_index 2
-	csr_offset_addr = mmio_hdr.address - CSR_BASE_MMIO_ADDR;
-	csr_index = csr_offset_addr[$size(csr_index):1];
-		
-	// Subtract the BRAM address offset from the MMIO address to align the
-	// MMIO addresses with the BRAM words. The divide by two (shift right) accounts for
-	// MMIO being 32-bit word addressable and the block RAM being 64-bit word
-	// addressable.
-	// e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
-	// e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1       
-	bram_offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR;	
-        bram_addr = bram_offset_addr[$size(bram_addr):1];
+      // Compute the index of the CSR based on the mmio address.
+      // The divide by two (shift right) accounts for the fact that each MMIO is
+      // 32-bit word addressable, but registers are 64 bits.
+      // e.g. CSR_BASE_MMIO_ADDR+2 maps to csr_index 1.
+      // e.g. CSR_BASE_MMIO_ADDR+4 maps to csr_index 2
+      // There are two different indexes used here because the write
+      // index is not delayed, but the read index has to be delayed
+      // to align with the output of the block RAM read.
+      csr_offset_addr_wr = mmio_hdr.address - CSR_BASE_MMIO_ADDR;
+      csr_offset_addr_rd = addr_delayed - CSR_BASE_MMIO_ADDR;
+      csr_index_wr = csr_offset_addr_wr[$size(csr_index_wr):1];
+      csr_index_rd = csr_offset_addr_rd[$size(csr_index_rd):1];
+      
+      // Subtract the BRAM address offset from the MMIO address to align the
+      // MMIO addresses with the BRAM words. The divide by two (shift right) accounts for
+      // MMIO being 32-bit word addressable and the block RAM being 64-bit word
+      // addressable.
+      // e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
+      // e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1       
+      bram_offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR;	
+      bram_addr = bram_offset_addr[$size(bram_addr):1];
 
-	// Define the bram write address.
-	bram_wr_addr = bram_addr;
+      // Define the bram write address.
+      bram_wr_addr = bram_addr;
 
-	// Write to the block RAM when there is a MMIO write request and the address falls
-	// within the range of the BRAM
-	if (rx.c0.mmioWrValid && (mmio_hdr.address >= BRAM_BASE_MMIO_ADDR && mmio_hdr.address <= BRAM_UPPER_MMIO_ADDR ))
-	  bram_wr_en = 1;
-	else
-	  bram_wr_en = 0;	
-     end    
+      // Write to the block RAM when there is a MMIO write request and the address falls
+      // within the range of the BRAM
+      if (rx.c0.mmioWrValid && (mmio_hdr.address >= BRAM_BASE_MMIO_ADDR && mmio_hdr.address <= BRAM_UPPER_MMIO_ADDR ))
+	bram_wr_en = 1;
+      else
+	bram_wr_en = 0;	
+   end    
 
    // Sequential logic to create all registers.
-   always_ff @(posedge clk or posedge rst)
-     begin 
-        if (rst) 
-	  begin 
-	     // Asynchronous reset for the CSRs.
-	     for (int i=0; i < NUM_CSR; i++) begin
-		csr[i] <= 0;
-	     end		       
-          end
-        else
-          begin
-	     // Register the read address input to create one extra cycle of delay.
-	     // This isn't necessary, but is done in this example to make illustrate
-	     // how to handle multi-cycle reads. When combined with the block RAM's
-	     // 1-cycle latency, and the registered output, each read takes 3 cycles.     
-	     bram_rd_addr <= bram_addr;
-	     
-             // Check to see if there is a valid write being received from the processor.	    
-             if (rx.c0.mmioWrValid == 1)
-               begin
-		  // Verify the address is within the range of CSR addresses.
-		  // If so, store into the corresponding register.
-		  // NOTE: In realistic use cases, many of the CSRs will only be writeable by
-		  // the AFU itself. For example, if a hardware exception occurs during execution,
-		  // the AFU can put an error code into a CSR that software can read.
-		  // In general, all CSRs can be read by software, but only some can be written
-		  // by software. This example allows software writes to all CSRs solely for
-		  // MMIO testing purposes.
-		  if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR) begin
-		     csr[csr_index] <= rx.c0.data[CSR_DATA_WIDTH-1:0];
-		  end		 		  
-               end
-          end
-     end
+   always_ff @(posedge clk or posedge rst) begin      
+      if (rst) begin 
+	 // Asynchronous reset for the CSRs.
+	 for (int i=0; i < NUM_CSR; i++) begin
+	    csr[i] <= 0;
+	 end		       
+      end
+      else begin
+	 // Register the read address input to create one extra cycle of delay.
+	 // This isn't necessary, but is done in this example to illustrate
+	 // how to handle multi-cycle reads. When combined with the block RAM's
+	 // 1-cycle latency, and the registered output, each read takes 3 cycles.     
+	 bram_rd_addr <= bram_addr;
+	 
+         // Check to see if there is a valid write being received from the processor.	    
+         if (rx.c0.mmioWrValid == 1) begin
+	    // Verify the address is within the range of CSR addresses.
+	    // If so, store into the corresponding register.
+	    // NOTE: In realistic use cases, many of the CSRs will only be writeable by
+	    // the AFU itself. For example, if a hardware exception occurs during execution,
+	    // the AFU can put an error code into a CSR that software can read.
+	    // In general, all CSRs can be read by software, but only some can be written
+	    // by software. This example allows software writes to all CSRs solely for
+	    // MMIO testing purposes.
+	    if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR) begin
+	       csr[csr_index_wr] <= rx.c0.data[CSR_DATA_WIDTH-1:0];
+	    end		 		  
+         end
+      end
+   end
    
    // ============================================================= 		    
    // MMIO CSR read code
    // Unlike the previous examples, in this situation we do not use
    // an always_ff block because we explicitly do not want registers
-   // for these assignments. Instead, we want to define signals that
-   // get delayed by the latency of the block RAM so that all reads
-   // (registers and block RAM) take the same time.
-   //
-   // Instead of writing directly to tx.c2.data, this block now
-   // writes to reg_rd_data, which gets delayed by BRAM_LATENCY
-   // cycles before being provided as a response to the MMIO read.
+   // for these assignments. See the schematic in the corresponding
+   // set of slides. 
    // ============================================================= 		    
-   always_comb
-     begin
-	// Clear the status registers in the Tx port that aren't used by MMIO.
-        tx.c1.hdr    = '0;
-        tx.c1.valid  = '0;
-        tx.c0.hdr    = '0;
-        tx.c0.valid  = '0;
+   always_comb begin
+      // Clear the status flags in the Tx port that aren't used by MMIO.
+      tx.c1.hdr    = '0;
+      tx.c1.valid  = '0;
+      tx.c0.hdr    = '0;
+      tx.c0.valid  = '0;
+      tx.c2.data   = '0;       
+      
+      // Check the requested read address of the read request and provide the data 
+      // from the resource mapped to that address. Note that this address is the
+      // delayed address because we had to wait multiple cycles for the block RAM
+      // to respond.
+      case (addr_delayed)
+	
+	// Provide the required AFU header CSRs	       	       
+        // AFU header
+        16'h0000: tx.c2.data = {
+				4'b0001, // Feature type = AFU
+				8'b0,    // reserved
+				4'b0,    // afu minor revision = 0
+				7'b0,    // reserved
+				1'b1,    // end of DFH list = 1
+				24'b0,   // next DFH offset = 0
+				4'b0,    // afu major revision = 0
+				12'b0    // feature ID = 0
+				};
+	
+        // AFU_ID_L
+        16'h0002: tx.c2.data = AFU_ID[63:0];
+	
+        // AFU_ID_H
+        16'h0004: tx.c2.data = AFU_ID[127:64];
+	
+        // DFH_RSVD0 and DFH_RSVD1
+        16'h0006: tx.c2.data = 64'h0;
+        16'h0008: tx.c2.data = 64'h0;
+	
+	// =============================================================   
+	// Define user CSRs here
+	// =============================================================   
+      	
+        default:
+	  // Check to see if the delayed address falls withing the CSR or BRAM range.
+	  if (addr_delayed >= CSR_BASE_MMIO_ADDR && addr_delayed <= CSR_UPPER_MMIO_ADDR)
+	    tx.c2.data = csr[csr_index_rd];
+	  else if (addr_delayed >= BRAM_BASE_MMIO_ADDR && addr_delayed <= BRAM_UPPER_MMIO_ADDR)
+	    tx.c2.data = bram_rd_data;	       
+      endcase
 
-	reg_rd_data = 64'h0;
-        
-	// If there is a read request from the processor, handle that request.
-        if (rx.c0.mmioRdValid == 1'b1)
-          begin
-             
-	     // Check the requested read address of the read request and provide the data 
-	     // from the resource mapped to that address.
-             case (mmio_hdr.address)
-	       
-	       // Provide the required AFU header CSRs	       	       
-               // AFU header
-               16'h0000: reg_rd_data = {
-					4'b0001, // Feature type = AFU
-					8'b0,    // reserved
-					4'b0,    // afu minor revision = 0
-					7'b0,    // reserved
-					1'b1,    // end of DFH list = 1
-					24'b0,   // next DFH offset = 0
-					4'b0,    // afu major revision = 0
-					12'b0    // feature ID = 0
-					};
-	       
-               // AFU_ID_L
-               16'h0002: reg_rd_data = AFU_ID[63:0];
-	       
-               // AFU_ID_H
-               16'h0004: reg_rd_data = AFU_ID[127:64];
-	       
-               // DFH_RSVD0 and DFH_RSVD1
-               16'h0006: reg_rd_data = 64'h0;
-               16'h0008: reg_rd_data = 64'h0;
-	       
-	       // =============================================================   
-	       // Define user CSRs here
-	       // =============================================================   
-      	       
-               default:
-		 // Verify the read address is within the CSR range.
-		 // If so, provide the corresponding CSR		 
-		 if (mmio_hdr.address >= CSR_BASE_MMIO_ADDR && mmio_hdr.address <= CSR_UPPER_MMIO_ADDR)
-		    reg_rd_data = csr[csr_index];		    
-             endcase
-          end
-     end // always_comb
+   end // always_comb
 
    // =============================================================   
-   // Delays to align the CSR reads and the block RAM reads.
+   // Delays to wait for the multi-cycle block RAM reads.
    // =============================================================   
    
    // Delay the transaction ID by the latency of the block RAM read.
@@ -295,22 +293,10 @@ module afu
       .*,
       .en('1),
       .data_in(rx.c0.mmioRdValid),
-      .data_out(tx.c2.mmioRdValid)	      
+      .data_out(mmioRdValid_delayed)	      
       );
-   
-   // Delay the register read data by the latency of the block RAM read.
-   delay 
-     #(
-       .CYCLES(BRAM_RD_LATENCY),
-       .WIDTH($size(reg_rd_data))	   
-       )
-   delay_reg_data 
-     (
-      .*,
-      .en('1),
-      .data_in(reg_rd_data),
-      .data_out(reg_rd_data_delayed)	      
-      );
+
+   assign tx.c2.mmioRdValid = mmioRdValid_delayed;
    
    // Delay the read address by the latency of the block RAM read.
    delay 
@@ -326,16 +312,4 @@ module afu
       .data_out(addr_delayed)	      
       );
    
-   // Choose either the delayed register data or the block RAM data based
-   // on the delayed address.
-   always_comb 
-     begin
-	// This code assumes that all block RAM addresses are above CSR
-	// addresses. Although true for the mapping in this example,
-	// this code might have to be changed for a more complex mapping.
-	if (addr_delayed < BRAM_BASE_MMIO_ADDR) 
-	   tx.c2.data = reg_rd_data_delayed;
-	else
-	   tx.c2.data = bram_rd_data;	   
-     end 
 endmodule
