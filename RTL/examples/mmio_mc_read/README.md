@@ -20,6 +20,9 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 This example expands on the mmio_ccip example to demonstrates how to perform multi-cycle (MC)
 reads that interface with resources other than registers.
 
+- [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E)
+- [Slides](examples/mmio_mc_read/mmio_mc_read.pptx)
+
 # Simulation with ASE:
 
   If not running on the DevCloud, ensure that the OPAE SDK is properly installed.  
