@@ -4,7 +4,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 
 # Suggested Study Order
 
-1. [Video: Intel PAC Overview](https://youtu.be/B8j0-N6tzV0), [Slides](../intel_pac_overview.pptx)   
+1. [Video: Intel PAC Overview](https://youtu.be/HatHuLtZ5-0), [Slides](../intel_pac_overview.pptx)   
 2. [Example: ccip_mmio](examples/ccip_mmio)
     - Description: Illustrates how to create a basic AFU that provides a memory-mapped register, and how to communicate with that register from C++ software.
     - [Video: CCI-P Explanation](https://www.youtube.com/watch?v=e03xuTsQ4fQ), [Slides](examples/ccip_mmio/intel_pac_rtl_ccip.pptx)
