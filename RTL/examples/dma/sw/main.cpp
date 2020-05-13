@@ -52,7 +52,6 @@ int main(int argc, char *argv[]) {
     // constructor searchers available FPGAs for one with an AFU with the
     // the specified ID
     AFU afu(AFU_ACCEL_UUID); 
-    auto input2  = afu.malloc<volatile int>(100000);
     cout << "Allocating input..." << endl;
     auto input  = afu.malloc<volatile int>(NUM_INTS);
     cout << "Allocating output..." << endl;
@@ -63,9 +62,8 @@ int main(int argc, char *argv[]) {
       input[i] = i % 2 ? 0xFFFF : 0;
       output[i] = 0;
     }
-
-    const unsigned CL_BYTES = 64;
-    unsigned num_cls = ceil((NUM_INTS*sizeof(volatile int)) / float(CL_BYTES));
+    
+    unsigned num_cls = ceil((NUM_INTS*sizeof(volatile int)) / float(AFU::kClBytes));
     cout << "NUM CLs = " << num_cls << endl;
 
     afu.write(0x0052, (uint64_t) input);
@@ -77,7 +75,7 @@ int main(int argc, char *argv[]) {
     
     bool errors = false;
     for (unsigned i=0; i < NUM_INTS; i++) {
-      cout << i << " " << output[i] << " " << input[i] << endl;
+      //cout << i << " " << output[i] << " " << input[i] << endl;
 
       if (output[i] != input[i]) {
 	cerr << "ERROR: Output does not match input." << endl;	

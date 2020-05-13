@@ -25,6 +25,8 @@ using namespace std;
 using namespace opae::fpga::types;
 using namespace opae::fpga::bbb::mpf::types;
 
+const unsigned AFU::kPageSizes[] = {4096, 2097152, 1073741824};
+
 
 handle::ptr_t AFU::requestAfu(const char* uuid) {
 
@@ -56,23 +58,6 @@ handle::ptr_t AFU::requestAfu(const char* uuid) {
   throw FPGA_BUSY;
 }
 
-/*
-volatile void* AFU::malloc(size_t bytes, bool read_only) {
-     
-  shared_buffer::ptr_t buf_handle;
-  
-  // Allocate a virtually contiguous region of memory, just like you
-  // would for any dynamic allocation in software.
-  
-#ifdef MFP_OPAE_HAS_BUF_READ_ONLY
-  buf_handle = mpf_shared_buffer::allocate(mpf, bytes, read_only);
-#else
-  buf_handle = mpf_shared_buffer::allocate(mpf, bytes);
-#endif
- 
-  return buf_handle->c_type();
-}
-*/
 
 AFU::AFU(handle::ptr_t fpga_handle) : fpga(fpga_handle) {
 
@@ -162,4 +147,32 @@ uint64_t AFU::read(uint64_t addr) {
     throw status;
 
   return data;
+}
+
+
+opae::fpga::types::shared_buffer::ptr_t AFU::alloc(size_t bytes, PageOptions page_option, bool read_only) {
+    
+  if (page_option < PAGE_4KB || page_option > PAGE_1GB)
+    throw std::runtime_error("ERROR: Invalid page size option.");
+  
+  opae::fpga::types::shared_buffer::ptr_t buf_handle;    
+  unsigned page_size = kPageSizes[page_option];
+  
+  // Quick way to round up to next multiple of page_size. This only works
+  // for powers of 2, but the page_size will always be a power of 2.
+  size_t page_aligned_bytes = (bytes + page_size - 1) & -page_size;
+  
+  //std::cout << "Bytes: " << bytes << std::endl;
+  //std::cout << "Allocated bytes: " << page_aligned_bytes << std::endl;
+  
+  // Allocate a virtually contiguous region of memory, just like you
+  // would for any dynamic allocation in software.    
+#ifdef MFP_OPAE_HAS_BUF_READ_ONLY
+  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, oage_aligned_bytes, read_only);
+#else
+  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, page_aligned_bytes);
+#endif
+  
+  buffers.push_back(buf_handle);
+  return buf_handle;
 }

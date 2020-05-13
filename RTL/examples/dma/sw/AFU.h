@@ -31,40 +31,38 @@ public:
   AFU(opae::fpga::types::handle::ptr_t);
   AFU(const char*);
   virtual ~AFU();
-
+  
+  // 4KB, 2MB, and 1GB pages
+  // 2^12, 2^21, 2^30
+  enum PageOptions {PAGE_4KB=0, PAGE_2MB, PAGE_1GB};
+  static const unsigned kPageSizes[];
+  static const PageOptions kDefaultPageOption = PageOptions::PAGE_2MB;
+  static const unsigned kClBytes = 64;
+  static const unsigned kClBits = 512;
+  
   static opae::fpga::types::handle::ptr_t requestAfu(const char* uuid); 
-
+  
   template <class T>
-  T* malloc(size_t bytes, bool read_only=false, bool is_volatile=true) {
+  T* malloc(size_t elements, PageOptions page_option=kDefaultPageOption, bool read_only=false) {   
     
     opae::fpga::types::shared_buffer::ptr_t buf_handle;
-    //opae::fpga::bbb::mpf::types::mpf_shared_buffer::ptr_t buf_handle;
-    
-    //size_t aligned_bytes = bytes % getpagesize() == 0 ? bytes : 
+    buf_handle = alloc(elements*sizeof(T), page_option, read_only);  
+    return reinterpret_cast<T*>(buf_handle->c_type()); 
+  }
 
-    // Allocate a virtually contiguous region of memory, just like you
-    // would for any dynamic allocation in software.    
-#ifdef MFP_OPAE_HAS_BUF_READ_ONLY
-    buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, bytes*sizeof(T), read_only);
-#else
-    buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, bytes*sizeof(T));
-#endif
-    
-    buffers.push_back(buf_handle);
+  template <class T>
+  T* mallocNonvolatile(size_t elements, PageOptions page_option=kDefaultPageOption, bool read_only=false) {   
+         
+    opae::fpga::types::shared_buffer::ptr_t buf_handle;
+    buf_handle = alloc(elements*sizeof(T), page_option, read_only); 
 
     // Allow for a dangerous const_cast that eliminates the volatility of the
     // allocated data. This could potentially cause errors since the compiler
     // may perform optimizations without the knowledge of the FPGA. However,
     // removing the volatility allows the returned pointer to be passed to
     // functions that do not have volatile parameters (e.g., libraries).
-    if (is_volatile)
-      return reinterpret_cast<T*>(buf_handle->c_type());    
-    else
-      return reinterpret_cast<T*>(const_cast<uint8_t*>(buf_handle->c_type()));
+    return reinterpret_cast<T*>(const_cast<uint8_t*>(buf_handle->c_type())); 
   }
-
-//volatile void* malloc (size_t bytes,
-//			   bool read_only=false);
 
   virtual void reset();
   virtual void write(uint64_t addr, uint64_t data);
@@ -75,6 +73,8 @@ protected:
   std::list<opae::fpga::types::shared_buffer::ptr_t> buffers;
   opae::fpga::types::handle::ptr_t fpga;
   opae::fpga::bbb::mpf::types::mpf_handle::ptr_t mpf;
+
+  opae::fpga::types::shared_buffer::ptr_t alloc(size_t bytes, PageOptions page_option, bool read_only);
 };
 
 #endif
