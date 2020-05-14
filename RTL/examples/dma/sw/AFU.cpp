@@ -25,7 +25,51 @@ using namespace std;
 using namespace opae::fpga::types;
 using namespace opae::fpga::bbb::mpf::types;
 
-const unsigned AFU::kPageSizes[] = {4096, 2097152, 1073741824};
+const unsigned AFU::PAGE_SIZES[] = {4096, 2097152, 1073741824};
+
+
+AFU::AFU(handle::ptr_t fpga_handle) : fpga_(fpga_handle) {
+
+  if (fpga_handle == nullptr)
+    throw runtime_error("ERROR: AFU can't be constructed with a null handle.");
+
+  mpf_ = mpf_handle::open(fpga_, 0, 0, 0);
+  if (mpf_ == nullptr) {
+    throw runtime_error("ERROR: MPF not available.");
+  }
+
+  if (!mpfVtpIsAvailable(*mpf_))
+    throw runtime_error("ERROR: VTP not available in MPF.");
+}
+
+
+AFU::AFU(const char* uuid) : fpga_(requestAfu(uuid)) {
+  
+  mpf_ = mpf_handle::open(fpga_, 0, 0, 0);
+  if (mpf_ == nullptr) {
+    throw runtime_error("ERROR: MPF not available.");
+  }
+
+  if (!mpfVtpIsAvailable(*mpf_))
+    throw runtime_error("ERROR: VTP not available in MPF.");
+}
+
+
+AFU::~AFU() {
+  
+  // Release all allocated buffers.
+  // NOTE: Causes seg fault for unknown reason
+  //for (shared_buffer::ptr_t i : buffers) 
+  //  i->release();
+
+  // NOTE: mpf->close() seg faults unless the
+  // buffer list is cleared first. Very strange.
+  // Maybe something to do with shared pointers?
+  buffers_.clear();
+
+  mpf_->close();
+  fpga_->close();
+}
 
 
 handle::ptr_t AFU::requestAfu(const char* uuid) {
@@ -59,57 +103,13 @@ handle::ptr_t AFU::requestAfu(const char* uuid) {
 }
 
 
-AFU::AFU(handle::ptr_t fpga_handle) : fpga(fpga_handle) {
-
-  if (fpga_handle == nullptr)
-    throw runtime_error("ERROR: AFU can't be constructed with a null handle.");
-
-  mpf = mpf_handle::open(fpga, 0, 0, 0);
-  if (mpf == nullptr) {
-    throw runtime_error("ERROR: MPF not available.");
-  }
-
-  if (!mpfVtpIsAvailable(*mpf))
-    throw runtime_error("ERROR: VTP not available in MPF.");
-}
-
-
-AFU::AFU(const char* uuid) : fpga(requestAfu(uuid)) {
-  
-  mpf = mpf_handle::open(fpga, 0, 0, 0);
-  if (mpf == nullptr) {
-    throw runtime_error("ERROR: MPF not available.");
-  }
-
-  if (!mpfVtpIsAvailable(*mpf))
-    throw runtime_error("ERROR: VTP not available in MPF.");
-}
-
-
-AFU::~AFU() {
-  
-  // Release all allocated buffers.
-  // NOTE: Causes seg fault for unknown reason
-  //for (shared_buffer::ptr_t i : buffers) 
-  //  i->release();
-
-  // NOTE: mpf->close() seg faults unless the
-  // buffer list is cleared first. Very strange.
-  // Maybe something to do with shared pointers?
-  buffers.clear();
-
-  mpf->close();
-  fpga->close();
-}
-
-
 void AFU::reset() {
 
-  fpga->reset();
+  fpga_->reset();
 }
 
 
-void AFU::write(uint64_t addr, uint64_t data) {
+void AFU::write(uint64_t addr, uint64_t data) const {
   
   // This AFU wrapper class only supports 64-bit MMIO transfers, which requires 
   // the 32-bit word address to be even.
@@ -122,13 +122,13 @@ void AFU::write(uint64_t addr, uint64_t data) {
   // The code multiples addr by 4 because fpgaWriteMMIO64 requires
   // a byte address. The address we specified in the RTL code was for 32-bit
   // words, so we need to multiply the word address by 4.
-  fpga_result status = fpgaWriteMMIO64(*fpga, 0, (uint32_t) addr*4, data);    
+  fpga_result status = fpgaWriteMMIO64(*fpga_, 0, (uint32_t) addr*4, data);    
   if (status != FPGA_OK) 
     throw status;
 }
 
 
-uint64_t AFU::read(uint64_t addr) {
+uint64_t AFU::read(uint64_t addr) const {
   
   // This AFU wrapper class only supports 64-bit MMIO transfers, which requires 
   // the 32-bit word address to be even.
@@ -142,7 +142,7 @@ uint64_t AFU::read(uint64_t addr) {
   // a byte address. The address we specified in the RTL code was for 32-bit
   // words, so we need to multiply the word address by 4.
   uint64_t data;  
-  fpga_result status = fpgaReadMMIO64(*fpga, 0, addr*4, &data);
+  fpga_result status = fpgaReadMMIO64(*fpga_, 0, addr*4, &data);
   if (status != FPGA_OK) 
     throw status;
 
@@ -156,23 +156,20 @@ opae::fpga::types::shared_buffer::ptr_t AFU::alloc(size_t bytes, PageOptions pag
     throw std::runtime_error("ERROR: Invalid page size option.");
   
   opae::fpga::types::shared_buffer::ptr_t buf_handle;    
-  unsigned page_size = kPageSizes[page_option];
+  unsigned page_size = this->PAGE_SIZES[page_option];
   
   // Quick way to round up to next multiple of page_size. This only works
   // for powers of 2, but the page_size will always be a power of 2.
   size_t page_aligned_bytes = (bytes + page_size - 1) & -page_size;
   
-  //std::cout << "Bytes: " << bytes << std::endl;
-  //std::cout << "Allocated bytes: " << page_aligned_bytes << std::endl;
-  
   // Allocate a virtually contiguous region of memory, just like you
   // would for any dynamic allocation in software.    
 #ifdef MFP_OPAE_HAS_BUF_READ_ONLY
-  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, oage_aligned_bytes, read_only);
+  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf_, oage_aligned_bytes, read_only);
 #else
-  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf, page_aligned_bytes);
+  buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf_, page_aligned_bytes);
 #endif
   
-  buffers.push_back(buf_handle);
+  buffers_.push_back(buf_handle);
   return buf_handle;
 }

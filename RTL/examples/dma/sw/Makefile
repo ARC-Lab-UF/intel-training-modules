@@ -29,7 +29,7 @@ $(TEST): $(OBJS)
 $(TEST)_ase: $(OBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS) $(ASE_LIBS)
 
-$(OBJDIR)/%.o: %.cpp | objdir
+$(OBJDIR)/%.o: %.cpp config.h AFU.h | objdir
 	$(CXX) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
