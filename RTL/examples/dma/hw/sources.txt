@@ -8,5 +8,6 @@ fifo.sv
 cci_dma.sv
 afu.sv
 csr_mgr.sv
-cci_afu_with_mpf.sv
+hal.sv
+ccip_std_afu.sv
 

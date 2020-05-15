@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     }
     
     if (errors > 0) {
-      cout << "DMA Test Failed With " << errors << " errors!!!!" << endl;
+      cout << "FAILURE: DMA Test Failed With " << errors << " errors!!!!" << endl;
       return EXIT_FAILURE;      
     }
     

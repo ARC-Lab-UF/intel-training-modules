@@ -306,47 +306,25 @@ module ccip_std_afu
 
 `endif // !`ifndef MPF_DISABLED
      
-    // ====================================================================
-    //
-    //  Instantiate the application.
-    //
-    // ====================================================================
-  
-   dma_if 
+   // ====================================================================
+   //
+   //  Instantiate the application.
+   //
+   // ====================================================================
+   
+   hal
      #(
-       .DATA_WIDTH($size(t_ccip_clData)),
-       .ADDR_WIDTH($size(t_ccip_clAddr))
+       .MMIO_START_ADDR(16'h0050),
+       .MMIO_END_ADDR(MPF_DFH_MMIO_ADDR/4 - 2)       
        )
-   dma();
-
-
-   // TODO: REPLACE WITH $SIZE REFERENCES
-   mmio_if 
-     #(
-       .DATA_WIDTH(64),
-       .ADDR_WIDTH(16),
-       .START_ADDR(16'h0050),
-       .END_ADDR(MPF_DFH_MMIO_ADDR/4 - 2)
-       )
-   mmio();
-        
-   cci_dma afu_wrapper 
+   hal
      (
       .clk(afu_clk),
       .rst(afu_reset),
-      .fiu(afu),		    
-      .dma(dma),
-      .mmio(mmio),
-      .c0NotEmpty,
-      .c1NotEmpty    		     
+      .cci(afu),
+      .c0Empty(!c0NotEmpty),
+      .c1Empty(!c1NotEmpty)
       );
-   
-   afu afu1
-       (
-        .clk(afu_clk),
-	.rst(afu_reset),
-        .mmio(mmio),
-	.dma(dma)	
-	);
+      
 
 endmodule
