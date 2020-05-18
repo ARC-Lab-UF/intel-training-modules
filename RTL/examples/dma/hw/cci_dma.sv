@@ -214,7 +214,7 @@ module cci_dma
 	 // Initialize write registers on go.
 	 if (dma.wr_go) begin	    
 	    wr_addr_r 		   <= dma.wr_addr;
-	    cci_wr_remaining_r 	   <= dma.rd_size;
+	    cci_wr_remaining_r 	   <= dma.wr_size;
 	    waiting_for_first_wr_r <= '1;	    
 	 end
 
