@@ -1,5 +1,45 @@
+// Copyright (c) 2020 University of Florida
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Greg Stitt
 // University of Florida
+
+// Module Name:  hal.sv
+// Description:  Implements a hardware abstraction layer (HAL) that hides
+//               the details of CCI-P and replaces them with a simpler
+//               MMIO and DMA interface and protocol. Although removing some
+//               of the flexibility of CCI-P, this more abstract interface
+//               makes the code easier to use for use cases that don't require
+//               the full CCI-P functionality.
+
+//===================================================================
+// Parameter Description
+// MMIO_START_ADDR : The 32-bit word starting address of the MMIO addresses
+//                   used by the AFU within the HAL.
+// MMIO_END_ADDR : The 32-bit word ending address of the MMIO addresses
+//                   used by the AFU within the HAL.
+//===================================================================
+
+//===================================================================
+// Interface Description
+// clk  : Clock input
+// rst  : Reset input (active high)
+// cci  : Cache cache interface signals
+// c0Empty : Asserted (active high) when there are no pending reads
+// c1Empty : Asserted (active high) when there are no pending writes
+//===================================================================
 
 `include "cci_mpf_platform.vh"
 `include "csr_mgr.vh"
@@ -12,13 +52,16 @@ module hal
    (
     input logic clk,
     input logic rst,
-	
-		cci_mpf_if.to_fiu cci,
-   
+		
+    cci_mpf_if.to_fiu cci,
+    
     input logic c0Empty,
     input logic c1Empty   
     );
 
+   localparam int MMIO_DATA_WIDTH = 64;
+   localparam int MMIO_ADDR_WIDTH = 16;
+      
    // Instantiate the DMA interface signals.
    dma_if 
      #(
@@ -30,21 +73,35 @@ module hal
    // TODO: Replace hardcoded values with $size of CCI signals.
    mmio_if 
      #(
-       .DATA_WIDTH(64),
-       .ADDR_WIDTH(16),
+       .DATA_WIDTH(MMIO_DATA_WIDTH),
+       .ADDR_WIDTH(MMIO_ADDR_WIDTH),
        .START_ADDR(MMIO_START_ADDR),
        .END_ADDR(MMIO_END_ADDR)
        ) mmio();
 
-  
    // Convert the DMA interface into CCI-P
    cci_dma dma_ctrl
      (
-      .cci(cci),
+      .clk(clk),
+      .rst(rst),
+
+      // This module originally just passed CCI, but Quartus was reporting
+      // errors about multiple drivers because the hal module was modifying
+      // the c2Tx signals. Although technical no signal within CCI had multiple
+      // drivers, Quartus apparently treats the entire interface a single
+      // signal, so any two modules that assign values to the same interface
+      // are seen as multiple drivers. I'm not sure if this behavior is
+      // defined by the SV standard, or if tool specific. 
+      //.cci(cci),   
+      .c0Tx(cci.c0Tx),
+      .c0TxAlmFull(cci.c0TxAlmFull),
+      .c1Tx(cci.c1Tx),
+      .c1TxAlmFull(cci.c1TxAlmFull),
+      .c0Rx(cci.c0Rx),
+      
       .dma(dma),
       .c0Empty,
-      .c1Empty,
-      .*
+      .c1Empty
       );
          
    //===================================================================

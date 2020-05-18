@@ -1,25 +1,61 @@
+// Copyright (c) 2020 University of Florida
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Greg Stitt
 // University of Florida
 
+// Module Name:  cci_dma
+// Description:  This module converts the DMA interface in dma_if.vh into
+//               CCI-P.
+
 `include "cci_mpf_if.vh"
 
-module cci_dma 
-  (
-   input       clk,
-   input       rst,
-	       cci_mpf_if.to_fiu cci,
-	       dma_if.mem dma,
-   input logic c0Empty,
-   input logic c1Empty
+module cci_dma
+   (
+    input 	clk,
+    input 	rst,
+   
+    // CCI signals for mem reads/writes
+    // NOTE: This was originally just a cci_mpf_if interface, but Quartus
+    // was reporting multiple driver errors even though not signals within
+    // the interface had more than one driver. Not sure if this is a SV
+    // defined behavior, or a Quartus issue. In any case, this code separates
+    // all the signals from cci_mpf_if that are needed by this module.
+    output 	t_if_cci_mpf_c0_Tx c0Tx,
+    input logic c0TxAlmFull,
+    output 	t_if_cci_mpf_c1_Tx c1Tx,
+    input logic c1TxAlmFull,
+    input 	t_if_cci_c0_Rx c0Rx,
+		
+		dma_if.mem dma,
+    input logic c0Empty,
+    input logic c1Empty
    );
 
    localparam int FIFO_DEPTH = 512;
 
    // Strangely, when just doing dma.ADDR_WIDTH I get errors saying "constant 
    // expression cannot contain a hierarchical identifier" in some tools. 
-   // However, declaring a function within the interface works just fine.
-   //localparam int ADDR_WIDTH = dma.getAddrWidth();
-   localparam int ADDR_WIDTH = dma.ADDR_WIDTH;
+   // Declaring a getAddrWidth function within the interface works just fine in
+   // some tools, but in Quartus I get an error about too many ports in the
+   // module instantiation. The third option works in every tool but is my
+   // least preferred because it relies on structures that are external to the
+   // module.
+   //localparam int ADDR_WIDTH = dma.ADDR_WIDTH;   
+   //localparam int ADDR_WIDTH = dma.getAddrWidth();   
+   localparam int ADDR_WIDTH = $size(t_ccip_clAddr);
       
    // The counts are intentionally one bit larger to support counts from 0
    // to the maximum possible number of cachelines. For example, 8 cachelines
@@ -51,33 +87,33 @@ module cci_dma
                                     rd_addr_r,
                                     t_cci_mdata'(0),
                                     rd_hdr_params);
-   end
-
+   end // always_comb
+   
    logic rd_fifo_almost_full;
    
-   // A request request should happen when there are still
+   // A read request should happen when there are still
    // cachelines to be read and the read request buffer isn't
    // almost full, and the read data buffer isn't almost full.
    logic cci_rd_en;   
    assign cci_rd_en = cci_rd_remaining_r > 0 && 
-		      !cci.c0TxAlmFull &&
+		      !c0TxAlmFull &&
 		      !rd_fifo_almost_full;
 
    // Make read requests (on the CCI c0 Tx port).
    always_ff @(posedge clk or posedge rst) begin
       if (rst) begin
 	 // Only the valid bit needs to be cleared on reset.
-         cci.c0Tx.valid <= 1'b0;
+         c0Tx.valid <= 1'b0;
       end      
       else begin
 	 // Assign the read request signals, which is enabled by cci_rd_en.
-         cci.c0Tx <= cci_mpf_genC0TxReadReq(rd_hdr, cci_rd_en);	 
+         c0Tx <= cci_mpf_genC0TxReadReq(rd_hdr, cci_rd_en);	 
       end
    end
 
    // Determine when CCI is providing read data.
    logic rd_response_valid;
-   assign rd_response_valid = cci_c0Rx_isReadRsp(cci.c0Rx);
+   assign rd_response_valid = cci_c0Rx_isReadRsp(c0Rx);
    
    logic [$clog2(FIFO_DEPTH):0] rd_fifo_space;
 
@@ -88,7 +124,7 @@ module cci_dma
    // FIFO to buffer memory reads before the AFU reads it from the DMA channel.
    fifo 
      #(
-       .WIDTH(512),
+       .WIDTH($size(c0Rx.data)),
        .DEPTH(FIFO_DEPTH)
        )
    rd_fifo 
@@ -101,7 +137,7 @@ module cci_dma
 	 .almost_full(),
 	 .count(),
 	 .space(rd_fifo_space),
-	 .wr_data(cci.c0Rx.data),
+	 .wr_data(c0Rx.data),
 	 .wr_en(rd_response_valid),
 	 .*
 	 );     					       
@@ -117,17 +153,17 @@ module cci_dma
    // CCI write Tx channel isn't almost full, and when there are still
    // things left to write.
    logic cci_wr_en;
-   assign cci_wr_en = dma.wr_en && !cci.c1TxAlmFull && cci_wr_remaining_r > 0;
+   assign cci_wr_en = dma.wr_en && !c1TxAlmFull && cci_wr_remaining_r > 0;
    
    // Control logic for memory writes
    always_ff @(posedge clk or posedge rst) begin
       if (rst) begin
-         cci.c1Tx.valid <= 1'b0;
+         c1Tx.valid <= 1'b0;
       end
       else begin
-         cci.c1Tx.valid <= cci_wr_en;	 
-	 cci.c1Tx.hdr 	<= wr_hdr;
-	 cci.c1Tx.data 	<= dma.wr_data;
+         c1Tx.valid <= cci_wr_en;	 
+	 c1Tx.hdr   <= wr_hdr;
+	 c1Tx.data  <= dma.wr_data;
       end
    end
    
@@ -177,8 +213,8 @@ module cci_dma
 
 	 // Initialize write registers on go.
 	 if (dma.wr_go) begin	    
-	    wr_addr_r 		 <= dma.wr_addr;
-	    cci_wr_remaining_r 	 <= dma.rd_size;
+	    wr_addr_r 		   <= dma.wr_addr;
+	    cci_wr_remaining_r 	   <= dma.rd_size;
 	    waiting_for_first_wr_r <= '1;	    
 	 end
 
@@ -196,11 +232,11 @@ module cci_dma
 
 	 // On a CCI read request, update the read registers.
 	 if (cci_rd_en) begin
-	    rd_addr_r <= rd_addr_r + 1;	    
+	    rd_addr_r 	       <= rd_addr_r + 1;	    
 	    cci_rd_remaining_r <= cci_rd_remaining_r - 1;
 	    
 	    // Purposesly blocking since this will be upated again below.
-	    cci_rd_pending_r = cci_rd_pending_r + 1;	    
+	    cci_rd_pending_r 	= cci_rd_pending_r + 1;	    
 	 end
 
 	 // When CCI reponds with data, decrement the pending reads.
@@ -225,9 +261,9 @@ module cci_dma
    end 
 
    // Assign DMA interface outputs.
-   assign dma.rd_done = !rd_starting && !reads_are_pending ? 1'b1 : 1'b0; 
+   assign dma.rd_done = !rd_starting && !reads_are_pending  ? 1'b1 : 1'b0; 
    assign dma.wr_done = !wr_starting && !writes_are_pending ? 1'b1 : 1'b0;   
-   assign dma.full = cci.c1TxAlmFull;
+   assign dma.full    = c1TxAlmFull;
   
 endmodule
 

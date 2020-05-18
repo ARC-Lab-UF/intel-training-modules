@@ -1,5 +1,58 @@
+// Copyright (c) 2020 University of Florida
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Greg Stitt
 // University of Florida
+
+// Module Name:  fifo.sv
+// Description:  This module implements a basic FIFO with parameters for
+//               width (number of bits), depth (number of elements in FIFOs),
+//               and a configurable almost full flag. The FIFO provides
+//               the output on the same cycle that empty is cleared, as opposed
+//               to some FIFOs that have a 1+ cycle latency when asserting
+//               rd_en.
+//
+// Notes: FIFOs that provide data on the same cycle that empty is cleared, as
+//        opposed to 1+ cycles after rd_en is asserted tend to have lower max
+//        clock frequencies. This particular FIFO style was chosen to simplify
+//        the control logic in the rest of the application.
+
+//==========================================================================
+// Parameter Description
+// width             : the width of the FIFO in bits 
+// depth             : the depth of the FIFO in words
+// almost_full_count : the count at which almost_full is asserted.
+//==========================================================================
+
+//==========================================================================
+// Interface Description (all control inputs are active high)
+// clk         : clock
+// rst         : reset (asynchronous)
+// rd          : read enable, acts like a read acknowledgement since data
+//               is already available on rd_data when !empty.
+// wr          : write enable
+// empty       : asserted when the FIFO is empty
+// full        : asserted when the FIFO is full
+// almost_full : asserted when count >= ALMOST_FULL_COUNT parameter
+// count       : specifies the current number of words in the FIFO
+// space       : specifies the current remaining space in the FIFO before
+//               being completely full
+// wr_data     : input to write into the FIFO
+// rd_data     : output read from the FIFO, available in the same cycle that
+//               empty is cleared.
+//==========================================================================
 
 module fifo #(parameter int WIDTH,
 	      parameter int DEPTH,
@@ -45,8 +98,8 @@ module fifo #(parameter int WIDTH,
    assign rd_addr_adjusted = (valid_rd == 1'b0) ? rd_addr : ADDR_WIDTH'(rd_addr+1);
 
    // Safety checks to prevent reads when empty and writes when full.
-   assign valid_wr = wr_en && ~full;
-   assign valid_rd = rd_en && ~empty;
+   assign valid_wr = wr_en && !full;
+   assign valid_rd = rd_en && !empty;
    
    always_ff @ (posedge clk or posedge rst) begin     
       if (rst) begin
