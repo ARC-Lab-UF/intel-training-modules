@@ -1,6 +1,6 @@
 afu.json
 
-C:${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/hw/rtl/cci_mpf_sources.txt
+C:../../../base/intel-fpga-bbb/BBB_cci_mpf/hw/rtl/cci_mpf_sources.txt
 
 +incdir+.
 memory_map.sv
