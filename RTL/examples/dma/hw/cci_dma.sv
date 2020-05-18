@@ -8,22 +8,28 @@ module cci_dma
    input       clk,
    input       rst,
 	       cci_mpf_if.to_fiu cci,
-	       dma_if.dma dma,
+	       dma_if.mem dma,
    input logic c0Empty,
    input logic c1Empty
    );
 
-   localparam int FIFO_DEPTH = 512;  
-   
+   localparam int FIFO_DEPTH = 512;
+
+   // Strangely, when just doing dma.ADDR_WIDTH I get errors saying "constant 
+   // expression cannot contain a hierarchical identifier" in some tools. 
+   // However, declaring a function within the interface works just fine.
+   //localparam int ADDR_WIDTH = dma.getAddrWidth();
+   localparam int ADDR_WIDTH = dma.ADDR_WIDTH;
+      
    // The counts are intentionally one bit larger to support counts from 0
    // to the maximum possible number of cachelines. For example, 8 cachelines
    // requires 4 bits (4'b1000). However, there are 8 different addresses,
    // which only requires 3 bits (3'b000 to 3'b111).
-   logic [dma.ADDR_WIDTH:0] cci_rd_remaining_r;
-   logic [dma.ADDR_WIDTH:0] cci_rd_pending_r;
-   logic [dma.ADDR_WIDTH:0] dma_rd_remaining_r;   
-   logic [dma.ADDR_WIDTH:0] cci_wr_remaining_r;   
-   logic [dma.ADDR_WIDTH-1:0] rd_addr_r, wr_addr_r;
+   logic [ADDR_WIDTH:0] cci_rd_remaining_r;
+   logic [ADDR_WIDTH:0] cci_rd_pending_r;
+   logic [ADDR_WIDTH:0] dma_rd_remaining_r;   
+   logic [ADDR_WIDTH:0] cci_wr_remaining_r;   
+   logic [ADDR_WIDTH-1:0] rd_addr_r, wr_addr_r;
    
    // Create the read header that defines the request to the FIU
    t_cci_mpf_c0_ReqMemHdr rd_hdr;

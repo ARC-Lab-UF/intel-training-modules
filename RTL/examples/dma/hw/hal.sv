@@ -12,7 +12,7 @@ module hal
    (
     input logic clk,
     input logic rst,
-		
+	
 		cci_mpf_if.to_fiu cci,
    
     input logic c0Empty,
@@ -36,16 +36,17 @@ module hal
        .END_ADDR(MMIO_END_ADDR)
        ) mmio();
 
+  
    // Convert the DMA interface into CCI-P
-   cci_dma cci_dma
+   cci_dma dma_ctrl
      (
-      .cci,
-      .dma,
+      .cci(cci),
+      .dma(dma),
       .c0Empty,
       .c1Empty,
       .*
       );
-
+         
    //===================================================================
    // Convert CCI-P MMIO to the simplified HAL MMIO protocol.   
    assign mmio.rd_en = cci_csr_isRead(cci.c0Rx);
@@ -80,9 +81,10 @@ module hal
    // in addition to an MMIO interface for normal MMIO communication.
    afu afu
      (
-      .mmio,
-      .dma,
-      .*
+      .clk(clk),
+      .rst(rst),
+      .mmio(mmio),
+      .dma(dma.peripheral)
       );
 
 endmodule

@@ -20,15 +20,21 @@ interface dma_if #(parameter int DATA_WIDTH,
    logic [DATA_WIDTH-1:0] wr_data;
    addr_t wr_addr;
    logic 		  full;
+
+   function int getAddrWidth;
+      return ADDR_WIDTH;
+   endfunction
    
-   modport dma 
+   modport mem 
      (
+      import getAddrWidth,
+      
       input  rd_go,
       input  rd_en,
       input  rd_addr,
       input  rd_size,
       output rd_data,
-      input  rd_done,
+      output rd_done,
       output empty,
 
       input  wr_go,
@@ -36,27 +42,29 @@ interface dma_if #(parameter int DATA_WIDTH,
       input  wr_addr,
       input  wr_size,
       input  wr_data,
-      input  wr_done,
-      input  full				
+      output wr_done,
+      output full				
       );
    
    modport peripheral 
      (
+      import getAddrWidth,
+      
       output rd_go,
       output rd_en,
       output rd_addr,
       output rd_size,
-      output rd_data,
-      output rd_done,
+      input  rd_data,
+      input  rd_done,
       input  empty,
 		       
       output wr_go,
       output wr_en,
       output wr_addr,
       output wr_size,
-      input  wr_data,
-      output wr_done,
-      output full		       
+      output wr_data,
+      input  wr_done,
+      input  full		       
       );
    
 endinterface

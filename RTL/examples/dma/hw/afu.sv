@@ -1,16 +1,23 @@
 `include "cci_mpf_if.vh"
 
-module afu (
-	    input clk,
-	    input rst,
-	    mmio_if.user mmio,
-	    dma_if.peripheral dma
-	    );
+module afu 
+  (
+   input clk,
+   input rst,
+	 mmio_if.user mmio,
+	 dma_if.peripheral dma
+   );
 
+   //localparam ADDR_WIDTH = dma.getAddrWidth();
+   localparam ADDR_WIDTH = dma.ADDR_WIDTH;
+   
    // I want to just use dma.addr_t, but apparently
-   // either SV or Modelsim doesn't support that.
-   typedef logic [dma.ADDR_WIDTH-1:0] addr_t;
-   typedef logic [dma.ADDR_WIDTH:0] count_t;
+   // either SV or Modelsim doesn't support that. Similarly, I can't
+   // just do dma:ADDR_WIDTH without getting errors or warnings about
+   // "constant expression cannot contain a hierarchical identifier" in
+   // some tools. This is why people hate FPGA tools.
+   typedef logic [ADDR_WIDTH-1:0] addr_t;
+   typedef logic [ADDR_WIDTH:0] count_t;
    
    logic [63:0] rd_addr, wr_addr;
    count_t 	size;
@@ -25,7 +32,7 @@ module afu (
    memory_map
      #(
        .ADDR_WIDTH(64),
-       .SIZE_WIDTH(dma.ADDR_WIDTH+1)
+       .SIZE_WIDTH(ADDR_WIDTH+1)
        )
      memory_map (.*);
 
