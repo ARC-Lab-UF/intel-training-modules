@@ -9,9 +9,9 @@
       "accelerator-clusters":
          [
             {
-               "name": "SOMETHING",
+               "name": "afu",
                "total-contexts": 1,
-               "accelerator-type-uuid": "092a3e62-81c5-499a-ae2c-62ff4788fadd"
+               "accelerator-type-uuid": "9f0c38be-cb5b-45c8-b3d3-b9a3aaef0cb6"
             }
          ]
    }

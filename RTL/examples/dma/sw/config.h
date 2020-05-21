@@ -22,12 +22,12 @@ typedef volatile int dma_data_t;
 
 // When simulating, there is a loop that does nothing but wait for the DMA 
 // to finish. This constant "polling" is very inefficient and can slow down 
-// the CPU. Setting this to true causes the processor to periodically sleep
+// the CPU. Defining this flag causes the processor to periodically sleep
 // during this polling.
-// NOTE: For execution on the FPGA, this should likely be false.
-const bool SLEEP_WHILE_WAITING = true;
+// NOTE: For execution on the FPGA, comment this out.
+#define SLEEP_WHILE_WAITING
 
-// The number of milliseconds to sleep when SLEEP_WHILE_WAITING is true.
+// The number of milliseconds to sleep when SLEEP_WHILE_WAITING is defined.
 const unsigned SLEEP_MS = 10;
 
 

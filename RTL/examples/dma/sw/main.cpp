@@ -24,7 +24,7 @@
 // be accessed by both software and the AFU.
 
 // INSTRUCTIONS: Change the configuration settings in config.h to test 
-// different types and amounts of data.
+// different types of data.
 
 #include <cstdlib>
 #include <iostream>
@@ -91,8 +91,9 @@ int main(int argc, char *argv[]) {
 
       // Wait until the FPGA is done.
       while (afu.read(MMIO_DONE) == 0) {
-	if (SLEEP_WHILE_WAITING)
-	  std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
+#ifdef SLEEP_WHILE_WAITING
+	this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
+#endif
       }
         
       // Verify correct output.

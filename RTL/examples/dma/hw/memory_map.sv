@@ -79,9 +79,6 @@ module memory_map
    input logic 	       done   
    );
 
-   logic 	       rst_r = 1'b0;
-   logic [63:0]        rst_count_r = 64'b0;
-
    // =============================================================//   
    // MMIO write code
    // =============================================================//     
@@ -91,18 +88,10 @@ module memory_map
 	 rd_addr  <= '0;
 	 wr_addr  <= '0;	     
 	 size     <= '0;
-	 
-	 rst_r   <= '1;	 
       end
       else begin
 	 go <= '0;
-
-
-	 if (rst_r == 1'b1)
-	   rst_count_r ++;
-
-	 rst_r <= 1'b0;
-	 	 	 	 
+ 	 	 	 
          if (mmio.wr_en == 1'b1) begin
             case (mmio.wr_addr)
               16'h0050: go       <= mmio.wr_data[0];
@@ -132,7 +121,6 @@ module memory_map
 	      16'h0054: mmio.rd_data[$size(wr_addr)-1:0] <= wr_addr;
 	      16'h0056: mmio.rd_data[$size(size)-1:0] <= size;     	     
 	      16'h0058: mmio.rd_data[0] <= done;
-	      16'h0060: mmio.rd_data <= rst_count_r;
 	      
 	      // If the processor requests an address that is unused, return 0.
               default:  mmio.rd_data <= 64'h0;
