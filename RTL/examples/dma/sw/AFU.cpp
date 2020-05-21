@@ -18,6 +18,7 @@
 
 #include <opae/mmio.h>
 #include <opae/properties.h>
+//#include <opae/mpf/shim_vtp.h>
 
 #include "AFU.h"
 
@@ -59,13 +60,15 @@ AFU::~AFU() {
   
   // Release all allocated buffers.
   // NOTE: Causes seg fault for unknown reason
-  //for (shared_buffer::ptr_t i : buffers) 
+  //       Try using mpfVtpReleaseBuffer instead.
+  //for (shared_buffer::ptr_t i : buffers_) 
   //  i->release();
 
+  // Clear the map of shared buffer pointers. This should trigger
+  // the destructors and free the corresponding memory.
   // NOTE: mpf->close() seg faults unless the
-  // buffer list is cleared first. Very strange.
-  // Maybe something to do with shared pointers?
-  buffers_.clear();
+  // buffer_map is cleared first.  
+  buffer_map_.clear();
 
   mpf_->close();
   fpga_->close();
@@ -150,6 +153,17 @@ uint64_t AFU::read(uint64_t addr) const {
 }
 
 
+void AFU::free(volatile void* ptr) {
+  
+    auto it = buffer_map_.find((void*) ptr);
+    if (it == buffer_map_.end()) {
+      throw std::runtime_error("ERROR: AFU::free() called with pointer without shared buffer.");
+    }
+
+    buffer_map_.erase(it);      
+};
+
+
 opae::fpga::types::shared_buffer::ptr_t AFU::alloc(size_t bytes, PageOptions page_option, bool read_only) {
     
   if (page_option < PAGE_4KB || page_option > PAGE_1GB)
@@ -169,7 +183,7 @@ opae::fpga::types::shared_buffer::ptr_t AFU::alloc(size_t bytes, PageOptions pag
 #else
   buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf_, page_aligned_bytes);
 #endif
-  
-  buffers_.push_back(buf_handle);
+ 
+  buffer_map_[(void*) buf_handle->c_type()] = buf_handle;
   return buf_handle;
 }

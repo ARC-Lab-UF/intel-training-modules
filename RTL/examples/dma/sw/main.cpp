@@ -39,6 +39,8 @@
 
 using namespace std;
 
+#define NUM_TESTS 1
+
 
 int main(int argc, char *argv[]) {
 
@@ -47,57 +49,74 @@ int main(int argc, char *argv[]) {
     // constructor searchers available FPGAs for one with an AFU with the
     // the specified ID
     AFU afu(AFU_ACCEL_UUID); 
+    //afu.reset();
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
-    // Allocate memory for the FPGA. Any memory used by the FPGA must be 
-    // allocated with AFU::malloc(), or AFU::mallocNonvolatile() if you
-    // want to pass the pointer to a function that does not have the volatile
-    // qualifier. Use of non-volatile pointers is not guaranteed to work 
-    // depending on the compiler.   
-    auto input  = afu.malloc<dma_data_t>(DATA_AMOUNT);
-    auto output  = afu.malloc<dma_data_t>(DATA_AMOUNT);
+    for (unsigned test=0; test < NUM_TESTS; test++) {
 
-    // Initialize the input and output memory.
-    for (unsigned i=0; i < DATA_AMOUNT; i++) {
-      input[i] = (dma_data_t) rand();
-      output[i] = 0;
-    }
-    
-    // Inform the FPGA of the starting read and write address of the arrays.
-    afu.write(MMIO_RD_ADDR, (uint64_t) input);
-    afu.write(MMIO_WR_ADDR, (uint64_t) output);
+      // Allocate memory for the FPGA. Any memory used by the FPGA must be 
+      // allocated with AFU::malloc(), or AFU::mallocNonvolatile() if you
+      // want to pass the pointer to a function that does not have the volatile
+      // qualifier. Use of non-volatile pointers is not guaranteed to work 
+      // depending on the compiler.   
+      auto input  = afu.malloc<dma_data_t>(DATA_AMOUNT);
+      auto output  = afu.malloc<dma_data_t>(DATA_AMOUNT);  
 
-    // The FPGA DMA only handles cache-line transfers, so we need to convert
-    // the array size to cache lines.
-    unsigned total_bytes = DATA_AMOUNT*sizeof(dma_data_t);
-    unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
-    afu.write(MMIO_SIZE, num_cls);
+      cout << hex << (long) input << endl;
+      cout << hex << (long) output << endl;
 
-    // Start the FPGA DMA transfer.
-    afu.write(MMIO_GO, 1);  
+      cout << "Test " << test << "..." << endl;
 
-    // Wait until the FPGA is done.
-    while (afu.read(MMIO_DONE) == 0) {
-      if (SLEEP_WHILE_WAITING)
-	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
-    }
-        
-    // Verify correct output.
-    // NOTE: This could be replaced with memcp, but that only possible
-    // when not using volatile data (i.e. AFU::mallocNonvolatile()). 
-    unsigned errors = 0;
-    for (unsigned i=0; i < DATA_AMOUNT; i++) {
-      if (output[i] != input[i]) {
-	errors++;
+      // Initialize the input and output memory.
+      for (unsigned i=0; i < DATA_AMOUNT; i++) {
+	input[i] = (dma_data_t) rand();
+	output[i] = 0;
       }
-    }
     
-    if (errors > 0) {
-      cout << "FAILURE: DMA Test Failed With " << errors << " errors!!!!" << endl;
-      return EXIT_FAILURE;      
-    }
+      // Inform the FPGA of the starting read and write address of the arrays.
+      afu.write(MMIO_RD_ADDR, (uint64_t) input);
+      afu.write(MMIO_WR_ADDR, (uint64_t) output);
+
+      // The FPGA DMA only handles cache-line transfers, so we need to convert
+      // the array size to cache lines.
+      unsigned total_bytes = DATA_AMOUNT*sizeof(dma_data_t);
+      unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
+      afu.write(MMIO_SIZE, num_cls);
+
+      // Start the FPGA DMA transfer.
+      afu.write(MMIO_GO, 1);  
+
+      // Wait until the FPGA is done.
+      while (afu.read(MMIO_DONE) == 0) {
+	if (SLEEP_WHILE_WAITING)
+	  std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));
+      }
+        
+      // Verify correct output.
+      // NOTE: This could be replaced with memcp, but that only possible
+      // when not using volatile data (i.e. AFU::mallocNonvolatile()). 
+      unsigned errors = 0;
+      for (unsigned i=0; i < DATA_AMOUNT; i++) {
+	if (output[i] != input[i]) {
+	  errors++;
+	}
+      }
+
+      cout << "# of resets: " << afu.read(0x0060) << endl;  
+
     
-    cout << "DMA Test Successful!!!" << endl;
-    return EXIT_SUCCESS;   
+      if (errors > 0) {
+	cout << "FAILURE: DMA Test Failed With " << errors << " errors!!!!" << endl;
+	//return EXIT_FAILURE;      
+      }
+    
+      cout << "DMA Test Successful!!!" << endl;
+      //return EXIT_SUCCESS;
+      afu.free(input);
+      afu.free(output);
+    } 
+
+    return EXIT_SUCCESS;
   }
   // Exception handling for all the runtime errors that can occur within 
   // the AFU wrapper class.

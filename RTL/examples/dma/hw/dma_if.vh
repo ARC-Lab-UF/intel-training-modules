@@ -45,19 +45,15 @@ interface dma_if #(parameter int DATA_WIDTH,
    typedef logic [ADDR_WIDTH-1:0] addr_t;
    typedef logic [ADDR_WIDTH:0] count_t;
 
-   logic   rd_go, rd_done;
-   logic   wr_go, wr_done;
-   count_t rd_size, wr_size;
-   
-   logic rd_en;
+   logic rd_go, rd_done, rd_en, empty;
    logic [DATA_WIDTH-1:0] rd_data;
    addr_t rd_addr;
-   logic  empty;
+   count_t rd_size;
 
-   logic wr_en;
+   logic   wr_go, wr_done, wr_en, full;
    logic [DATA_WIDTH-1:0] wr_data;
    addr_t wr_addr;
-   logic  full;
+   count_t wr_size;
 
    function int getAddrWidth;
       return ADDR_WIDTH;
