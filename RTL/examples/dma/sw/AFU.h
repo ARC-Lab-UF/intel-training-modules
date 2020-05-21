@@ -77,9 +77,7 @@ public:
 protected: 
 
   // Members
-  //std::list<opae::fpga::types::shared_buffer::ptr_t> buffers_;
   std::map<void*, opae::fpga::types::shared_buffer::ptr_t> buffer_map_;
-
   opae::fpga::types::handle::ptr_t fpga_;
   opae::fpga::bbb::mpf::types::mpf_handle::ptr_t mpf_;
 

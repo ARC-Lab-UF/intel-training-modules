@@ -128,19 +128,21 @@ module cci_dma
        .DEPTH(FIFO_DEPTH)
        )
    rd_fifo 
-     (	 
-	 .empty(dma.empty),
-	 .rd_data(dma.rd_data),
-	 .rd_en(dma.rd_en),
-	 
-	 .full(),
-	 .almost_full(),
-	 .count(),
-	 .space(rd_fifo_space),
-	 .wr_data(c0Rx.data),
-	 .wr_en(rd_response_valid),
-	 .*
-	 );     					       
+     (
+      .clk(clk),
+      .rst(rst),
+      .empty(dma.empty),
+      .rd_data(dma.rd_data),
+      .rd_en(dma.rd_en),
+      
+      .full(),
+      .almost_full(),
+      .count(),
+      .space(rd_fifo_space), 
+      .wr_data(c0Rx.data),
+      .wr_en(rd_response_valid),
+      .*
+      );     					       
    
    // Construct a memory write request header.  
    t_cci_mpf_c1_ReqMemHdr wr_hdr;
@@ -167,7 +169,7 @@ module cci_dma
       end
    end
    
-   logic cci_rd_en_delayed, cci_wr_en_delayed;
+   logic cci_wr_en_delayed;
    
    // Reads are done when the last element is read out of the dma.
    // There shouldn't be a need to check for anything else, unless more
@@ -182,49 +184,31 @@ module cci_dma
    assign writes_are_pending = cci_wr_en_delayed || !c1Empty || 
 			       cci_wr_remaining_r > 0;   
    
-   logic rd_starting, waiting_for_first_rd_r;
-   assign rd_starting = dma.rd_go || waiting_for_first_rd_r;
-   
-   logic wr_starting, waiting_for_first_wr_r;
-   assign wr_starting = dma.wr_go || waiting_for_first_wr_r;   
-   
    always_ff @ (posedge clk or posedge rst) begin
       if (rst == 1'b1) begin
-	 cci_rd_remaining_r   <= '0;
-	 dma_rd_remaining_r   <= '0;
-	 cci_rd_pending_r     <= '0;	 
-	 cci_wr_remaining_r   <= '0;
-
-	 cci_rd_en_delayed    <= '0;
-	 cci_wr_en_delayed    <= '0;
-
-	 waiting_for_first_rd_r <= '0;
-	 waiting_for_first_wr_r <= '0;
+	 cci_rd_remaining_r 	<= '0;
+	 dma_rd_remaining_r 	<= '0;
+	 cci_rd_pending_r 	<= '0;	 
+	 cci_wr_remaining_r 	<= '0;
+	 cci_wr_en_delayed 	<= '0;
       end
       else begin
 
-	 // Initialize read registers on go.
-	 if (dma.rd_go) begin
-	    rd_addr_r 		 <= dma.rd_addr;
-	    cci_rd_remaining_r 	 <= dma.rd_size;
-	    dma_rd_remaining_r 	 <= dma.rd_size;
-	    waiting_for_first_rd_r <= '1;	    
+	 // Initialize read registers on go. The && rd_done ensures that
+	 // a user modifying go during execution doesn't corrupt the state.
+	 if (dma.rd_go && dma.rd_done) begin
+	    rd_addr_r 		   <= dma.rd_addr;
+	    cci_rd_remaining_r 	   <= dma.rd_size;
+	    dma_rd_remaining_r 	   <= dma.rd_size;
 	 end 
 
-	 // Initialize write registers on go.
-	 if (dma.wr_go) begin	    
+	 // Initialize write registers on go. The && wr_done ensures that
+	 // a user modifying go during execution doesn't corrupt the state.
+	 if (dma.wr_go && dma.wr_done) begin	    
 	    wr_addr_r 		   <= dma.wr_addr;
 	    cci_wr_remaining_r 	   <= dma.wr_size;
-	    waiting_for_first_wr_r <= '1;	    
 	 end
-
-	 // Clear the waiting flags after seeing the first read/write.
-	 if (!c0Empty)
-	   waiting_for_first_rd_r <= '0;
-
-	 if (!c1Empty)
-	   waiting_for_first_wr_r <= '0;
-
+	
 	 // Decrement the number of remaining reads on a valid read.
 	 if (dma.rd_en && !dma.empty) begin
 	    dma_rd_remaining_r <= dma_rd_remaining_r - 1;	    
@@ -243,26 +227,25 @@ module cci_dma
 	 if (rd_response_valid) begin
 	    cci_rd_pending_r = cci_rd_pending_r - 1;	    
 	 end
-
+	 
 	 // Update the write address on a valid DMA write.
 	 if (dma.wr_en && !dma.full) begin
 	    wr_addr_r <= wr_addr_r + 1;	    
 	 end
-
+	 
 	 // On a CCI write request, decrement the remaining requests
 	 if (cci_wr_en) begin
 	    cci_wr_remaining_r <= cci_wr_remaining_r - 1;	    
 	 end
-
+	 
 	 // Delay with an extra flip flop.
-	 cci_rd_en_delayed <= cci_rd_en;
 	 cci_wr_en_delayed <= cci_wr_en;
       end      
    end 
 
    // Assign DMA interface outputs.
-   assign dma.rd_done = !rd_starting && !reads_are_pending;
-   assign dma.wr_done = !wr_starting && !writes_are_pending;
+   assign dma.rd_done = !reads_are_pending;
+   assign dma.wr_done = !writes_are_pending;
    assign dma.full    = c1TxAlmFull;
   
 endmodule

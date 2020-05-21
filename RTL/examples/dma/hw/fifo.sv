@@ -95,7 +95,7 @@ module fifo #(parameter int WIDTH,
    // Adjust the read address to prefetch the next data from the BRAM
    // on a valid read. This is necessary to have the data appear on the
    // read port before receiving the rd_en.
-   assign rd_addr_adjusted = (valid_rd == 1'b0) ? rd_addr : ADDR_WIDTH'(rd_addr+1);
+   assign rd_addr_adjusted = (valid_rd == 1'b0) ? rd_addr : rd_addr+1'b1;
 
    // Safety checks to prevent reads when empty and writes when full.
    assign valid_wr = wr_en && !full;
@@ -106,7 +106,7 @@ module fifo #(parameter int WIDTH,
 	 wr_addr     <= '0;
 	 rd_addr     <= '0;
 	 count_r     <= '0;
-	 space_r     <= DEPTH;	   
+	 space_r     <= (ADDR_WIDTH+1)'(DEPTH);	   
 	 full 	     <= '1;
 	 almost_full <= '1;	   
 	 empty 	     <= '1;	   

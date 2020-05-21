@@ -39,36 +39,39 @@
 
 using namespace std;
 
-#define NUM_TESTS 1
 
+void printUsage(char *name);
+bool checkUsage(int argc, char *argv[], unsigned long &size, unsigned long &num_tests);
 
 int main(int argc, char *argv[]) {
+
+  unsigned long size, num_tests;
+  if (!checkUsage(argc, argv, size, num_tests)) {
+    printUsage(argv[0]);
+    return EXIT_FAILURE;
+  }
 
   try {
     // Create an AFU object to provide basic services for the FPGA. The 
     // constructor searchers available FPGAs for one with an AFU with the
     // the specified ID
     AFU afu(AFU_ACCEL_UUID); 
-    //afu.reset();
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    bool failed = false;
 
-    for (unsigned test=0; test < NUM_TESTS; test++) {
+    for (unsigned test=0; test < num_tests; test++) {
 
       // Allocate memory for the FPGA. Any memory used by the FPGA must be 
       // allocated with AFU::malloc(), or AFU::mallocNonvolatile() if you
       // want to pass the pointer to a function that does not have the volatile
       // qualifier. Use of non-volatile pointers is not guaranteed to work 
       // depending on the compiler.   
-      auto input  = afu.malloc<dma_data_t>(DATA_AMOUNT);
-      auto output  = afu.malloc<dma_data_t>(DATA_AMOUNT);  
+      auto input  = afu.malloc<dma_data_t>(size);
+      auto output  = afu.malloc<dma_data_t>(size);  
 
-      cout << hex << (long) input << endl;
-      cout << hex << (long) output << endl;
-
-      cout << "Test " << test << "..." << endl;
+      cout << "Starting Test " << test << "...";
 
       // Initialize the input and output memory.
-      for (unsigned i=0; i < DATA_AMOUNT; i++) {
+      for (unsigned i=0; i < size; i++) {
 	input[i] = (dma_data_t) rand();
 	output[i] = 0;
       }
@@ -79,7 +82,7 @@ int main(int argc, char *argv[]) {
 
       // The FPGA DMA only handles cache-line transfers, so we need to convert
       // the array size to cache lines.
-      unsigned total_bytes = DATA_AMOUNT*sizeof(dma_data_t);
+      unsigned total_bytes = size*sizeof(dma_data_t);
       unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
       afu.write(MMIO_SIZE, num_cls);
 
@@ -93,29 +96,34 @@ int main(int argc, char *argv[]) {
       }
         
       // Verify correct output.
-      // NOTE: This could be replaced with memcp, but that only possible
+      // NOTE: This could be replaced with memcp, but that is only possible
       // when not using volatile data (i.e. AFU::mallocNonvolatile()). 
       unsigned errors = 0;
-      for (unsigned i=0; i < DATA_AMOUNT; i++) {
+      for (unsigned i=0; i < size; i++) {
 	if (output[i] != input[i]) {
 	  errors++;
 	}
       }
 
-      cout << "# of resets: " << afu.read(0x0060) << endl;  
-
-    
       if (errors > 0) {
-	cout << "FAILURE: DMA Test Failed With " << errors << " errors!!!!" << endl;
-	//return EXIT_FAILURE;      
+	cout << "Failed with " << errors << " errors." << endl;
+	failed = true;
+      }
+      else {
+	cout << "Succeeded." << endl;
       }
     
-      cout << "DMA Test Successful!!!" << endl;
-      //return EXIT_SUCCESS;
+      // Free the allocated memory.
       afu.free(input);
       afu.free(output);
     } 
 
+    if (failed) {
+      cout << "DMA tests failed." << endl;
+      return EXIT_FAILURE;
+    }
+
+    cout << "All DMA Tests Successful!!!" << endl;
     return EXIT_SUCCESS;
   }
   // Exception handling for all the runtime errors that can occur within 
@@ -143,4 +151,47 @@ int main(int argc, char *argv[]) {
   }
 
   return EXIT_FAILURE;
+}
+
+
+void printUsage(char *name) {
+
+  cout << "Usage: " << name << " size num_tests\n"     
+       << "size (positive integer amount of dma_data_t to transfer)\n"
+       << "num_tests (positive integer amount of \"size\" DMA tests to run)" 
+       << endl;
+}
+
+// Returns unsigned long representation of string str.
+// Throws an exception if str is not a positive integer.
+unsigned long stringToPositiveInt(char *str) {
+
+  char *p;
+  long num = strtol(str, &p, 10);  
+  if (p != 0 && *p == '\0' && num > 0) {
+    return num;
+  }
+
+  throw runtime_error("String is not a positive integer.");
+  return 0;  
+}
+
+
+bool checkUsage(int argc, char *argv[], 
+		unsigned long &size, unsigned long &num_tests) {
+  
+  if (argc == 3) {
+    try {
+      size = stringToPositiveInt(argv[1]);
+      num_tests = stringToPositiveInt(argv[2]);
+    }
+    catch (const runtime_error& e) {    
+      return false;
+    }
+  }
+  else {
+    return false;
+  }
+
+  return true;
 }

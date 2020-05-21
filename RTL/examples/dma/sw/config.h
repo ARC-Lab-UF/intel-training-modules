@@ -16,11 +16,9 @@ typedef volatile int dma_data_t;
 // Other examples:
 //typedef volatile double dma_data_t;
 //typedef volatile unsigned char dma_data_t;
+// typedef int dma_data_t; // Must use AFU::mallocNonvolatile()
 // You can also use struct and class types, but will have to change the 
 // initialization and verification code in main.cpp.
-
-// Specifies the number of dma_data_t elements to be transferred by the DMA.
-const unsigned DATA_AMOUNT = 10000;
 
 // When simulating, there is a loop that does nothing but wait for the DMA 
 // to finish. This constant "polling" is very inefficient and can slow down 

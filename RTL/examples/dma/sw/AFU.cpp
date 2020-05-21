@@ -155,12 +155,15 @@ uint64_t AFU::read(uint64_t addr) const {
 
 void AFU::free(volatile void* ptr) {
   
-    auto it = buffer_map_.find((void*) ptr);
-    if (it == buffer_map_.end()) {
-      throw std::runtime_error("ERROR: AFU::free() called with pointer without shared buffer.");
-    }
-
-    buffer_map_.erase(it);      
+  // Casting away volatile qualifier to enable support for volatile and
+  // non-volatile. Should be safe since we are just searching for the address 
+  // of ptr and not modifying the contents of the array.
+  auto it = buffer_map_.find((void*) ptr);
+  if (it == buffer_map_.end()) {
+    throw std::runtime_error("ERROR: AFU::free() called with pointer without shared buffer.");
+  }
+  
+  buffer_map_.erase(it);      
 };
 
 
@@ -184,6 +187,7 @@ opae::fpga::types::shared_buffer::ptr_t AFU::alloc(size_t bytes, PageOptions pag
   buf_handle = opae::fpga::bbb::mpf::types::mpf_shared_buffer::allocate(mpf_, page_aligned_bytes);
 #endif
  
+  // Save the buffer handle in the buffer_map_ using the address as the key.
   buffer_map_[(void*) buf_handle->c_type()] = buf_handle;
   return buf_handle;
 }
