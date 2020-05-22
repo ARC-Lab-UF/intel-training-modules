@@ -76,50 +76,40 @@ module afu
 	 dma_if.peripheral dma
    );
 
-   // The DMA uses physical cache line addresses.
-   // Strangely, when just doing dma.ADDR_WIDTH I get errors saying "constant 
-   // expression cannot contain a hierarchical identifier" in some tools. 
-   // Declaring a getAddrWidth function within the interface works just fine in
-   // some tools, but in Quartus I get an error about too many ports in the
-   // module instantiation. The third option works in every tool but is my
-   // least preferred because it relies on structures that are external to the
-   // module and specific to the platform.
-   //localparam int DMA_ADDR_WIDTH = dma.ADDR_WIDTH;   
-   //localparam int DMA_ADDR_WIDTH = dma.getAddrWidth();   
-   localparam int DMA_ADDR_WIDTH = $size(t_ccip_clAddr);
+   localparam int CL_ADDR_WIDTH = $size(t_ccip_clAddr);
       
    // I want to just use dma.count_t, but apparently
    // either SV or Modelsim doesn't support that. Similarly, I can't
-   // just do dma:ADDR_WIDTH without getting errors or warnings about
+   // just do dma.SIZE_WIDTH without getting errors or warnings about
    // "constant expression cannot contain a hierarchical identifier" in
-   // some tools. 
-   typedef logic [DMA_ADDR_WIDTH:0] count_t;   
+   // some tools. Declaring a function within the interface works just fine in
+   // some tools, but in Quartus I get an error about too many ports in the
+   // module instantiation.
+   typedef logic [CL_ADDR_WIDTH:0] count_t;   
    count_t 	size;
    logic 	go;
    logic 	done;
 
    // Software provides 64-bit virtual byte addresses.
-   localparam int SOFTWARE_ADDR_WIDTH = 64;
-   logic [SOFTWARE_ADDR_WIDTH-1:0] rd_addr, wr_addr;
+   // Again, this constant would ideally get read from the DMA interface if
+   // there was widespread tool support.
+   localparam int VIRTUAL_BYTE_ADDR_WIDTH = 64;
+   logic [VIRTUAL_BYTE_ADDR_WIDTH-1:0] rd_addr, wr_addr;
 
    // Instantiate the memory map, which provides the starting read/write
-   // 64-bit virutal byte addresses, a transfer size (in cache lines), and a
+   // 64-bit virtual byte addresses, a transfer size (in cache lines), and a
    // go signal. It also sends a done signal back to software.
    memory_map
      #(
-       .ADDR_WIDTH(64),
-       .SIZE_WIDTH(DMA_ADDR_WIDTH+1)
+       .ADDR_WIDTH(VIRTUAL_BYTE_ADDR_WIDTH),
+       .SIZE_WIDTH(CL_ADDR_WIDTH+1)
        )
      memory_map (.*);
 
-   // Each CL has 64 bytes, so the byte index is log2(64) = 6 bits.
-   localparam CL_BYTE_INDEX_BITS = 6;
+   // Assign the starting addresses from the memory map.
+   assign dma.rd_addr = rd_addr;
+   assign dma.wr_addr = wr_addr;
    
-   // Converts the 64-bit virtual byte addresses to CL addresses.
-   // This just removes 6 low-end bits since there are 64 bytes in a cache line.
-   assign dma.rd_addr = rd_addr[CL_BYTE_INDEX_BITS +: $size(t_cci_clAddr)];
-   assign dma.wr_addr = wr_addr[CL_BYTE_INDEX_BITS +: $size(t_cci_clAddr)];
-
    // Use the size (# of cache lines) specified by software.
    assign dma.rd_size = size;
    assign dma.wr_size = size;
@@ -134,6 +124,8 @@ module afu
    assign dma.rd_en = !dma.empty && !dma.full;
 
    // Since this is a simple loopback, write to the DMA anytime we read.
+   // For most applications, write enable would be asserted when there is an
+   // output from a pipeline. In this case, the "pipeline" is a wire.
    assign dma.wr_en = dma.rd_en;
 
    // Write the data that is read.

@@ -59,14 +59,16 @@ module hal
     input logic c1Empty   
     );
 
-   localparam int MMIO_DATA_WIDTH = 64;
-   localparam int MMIO_ADDR_WIDTH = 16;
-      
+   localparam int MMIO_DATA_WIDTH         = 64;
+   localparam int MMIO_ADDR_WIDTH         = 16;
+   localparam int VIRTUAL_BYTE_ADDR_WIDTH = 64;
+   
    // Instantiate the DMA interface signals.
    dma_if 
      #(
        .DATA_WIDTH($size(t_ccip_clData)),
-       .ADDR_WIDTH($size(t_ccip_clAddr))
+       .ADDR_WIDTH(VIRTUAL_BYTE_ADDR_WIDTH),
+       .SIZE_WIDTH($size(t_ccip_clAddr)+1)
        ) dma();
 
    // Instantiate the MMIO interface signals.

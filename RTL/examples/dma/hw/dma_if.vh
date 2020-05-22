@@ -40,10 +40,11 @@
 `define DMA_IF
 
 interface dma_if #(parameter int DATA_WIDTH, 
-		   parameter int ADDR_WIDTH);
+		   parameter int ADDR_WIDTH,
+		   parameter int SIZE_WIDTH);
 
    typedef logic [ADDR_WIDTH-1:0] addr_t;
-   typedef logic [ADDR_WIDTH:0] count_t;
+   typedef logic [SIZE_WIDTH-1:0] count_t;
 
    logic rd_go, rd_done, rd_en, empty;
    logic [DATA_WIDTH-1:0] rd_data;

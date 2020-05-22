@@ -44,28 +44,18 @@ module cci_dma
     input logic c1Empty
    );
 
-   localparam int FIFO_DEPTH = 512;
-
-   // Strangely, when just doing dma.ADDR_WIDTH I get errors saying "constant 
-   // expression cannot contain a hierarchical identifier" in some tools. 
-   // Declaring a getAddrWidth function within the interface works just fine in
-   // some tools, but in Quartus I get an error about too many ports in the
-   // module instantiation. The third option works in every tool but is my
-   // least preferred because it relies on structures that are external to the
-   // module.
-   //localparam int ADDR_WIDTH = dma.ADDR_WIDTH;   
-   //localparam int ADDR_WIDTH = dma.getAddrWidth();   
-   localparam int ADDR_WIDTH = $size(t_ccip_clAddr);
+   localparam int FIFO_DEPTH = 512;   
+   localparam int CL_ADDR_WIDTH = $size(t_ccip_clAddr);
       
    // The counts are intentionally one bit larger to support counts from 0
    // to the maximum possible number of cachelines. For example, 8 cachelines
    // requires 4 bits (4'b1000). However, there are 8 different addresses,
    // which only requires 3 bits (3'b000 to 3'b111).
-   logic [ADDR_WIDTH:0] cci_rd_remaining_r;
-   logic [ADDR_WIDTH:0] cci_rd_pending_r;
-   logic [ADDR_WIDTH:0] dma_rd_remaining_r;   
-   logic [ADDR_WIDTH:0] cci_wr_remaining_r;   
-   logic [ADDR_WIDTH-1:0] rd_addr_r, wr_addr_r;
+   logic [CL_ADDR_WIDTH:0] cci_rd_remaining_r;
+   logic [CL_ADDR_WIDTH:0] cci_rd_pending_r;
+   logic [CL_ADDR_WIDTH:0] dma_rd_remaining_r;   
+   logic [CL_ADDR_WIDTH:0] cci_wr_remaining_r;   
+   logic [CL_ADDR_WIDTH-1:0] rd_addr_r, wr_addr_r;
    
    // Create the read header that defines the request to the FIU
    t_cci_mpf_c0_ReqMemHdr rd_hdr;
@@ -183,6 +173,9 @@ module cci_dma
    logic writes_are_pending;
    assign writes_are_pending = cci_wr_en_delayed || !c1Empty || 
 			       cci_wr_remaining_r > 0;   
+
+   // Each cache line has 64 bytes, so the byte index is log2(64) = 6 bits.
+   localparam CL_BYTE_INDEX_BITS = 6;
    
    always_ff @ (posedge clk or posedge rst) begin
       if (rst == 1'b1) begin
@@ -197,16 +190,20 @@ module cci_dma
 	 // Initialize read registers on go. The && rd_done ensures that
 	 // a user modifying go during execution doesn't corrupt the state.
 	 if (dma.rd_go && dma.rd_done) begin
-	    rd_addr_r 		   <= dma.rd_addr;
-	    cci_rd_remaining_r 	   <= dma.rd_size;
-	    dma_rd_remaining_r 	   <= dma.rd_size;
+	    // Converts the virtual byte addresses to a cache line address.
+	    // This just removes 6 low-end bits from the 64-bit virtual addr.
+	    rd_addr_r <= dma.rd_addr[CL_BYTE_INDEX_BITS +: $size(t_cci_clAddr)];
+	    cci_rd_remaining_r <= dma.rd_size;
+	    dma_rd_remaining_r <= dma.rd_size;
 	 end 
 
 	 // Initialize write registers on go. The && wr_done ensures that
 	 // a user modifying go during execution doesn't corrupt the state.
-	 if (dma.wr_go && dma.wr_done) begin	    
-	    wr_addr_r 		   <= dma.wr_addr;
-	    cci_wr_remaining_r 	   <= dma.wr_size;
+	 if (dma.wr_go && dma.wr_done) begin
+	    // Converts the virtual byte addresses to a cache line address.
+	    // This just removes 6 low-end bits from the 64-bit virtual addr.
+	    wr_addr_r <= dma.wr_addr[CL_BYTE_INDEX_BITS +: $size(t_cci_clAddr)];
+	    cci_wr_remaining_r <= dma.wr_size;
 	 end
 	
 	 // Decrement the number of remaining reads on a valid read.
