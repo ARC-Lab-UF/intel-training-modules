@@ -1,3 +1,5 @@
+FINISH LATER
+
 # Introduction
 
 These examples illustrate how to design AFUs for the Intel PAC using RTL code.
@@ -7,4 +9,4 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code.
 
 # DevCloud Instructions
 
-[Explanation for how to register, connect, and use the DevCloud for these exercises]([https://github.com/intel/FPGA-Devcloud).
+[Explanation for how to register, connect, and use the DevCloud for these exercises]([https://github.com/intel/FPGA-Devcloud)
