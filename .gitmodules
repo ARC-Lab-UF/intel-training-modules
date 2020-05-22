@@ -1,3 +1,0 @@
-[submodule "RTL/base/intel-fpga-bbb"]
-	path = RTL/base/intel-fpga-bbb
-	url = https://github.com/OPAE/intel-fpga-bbb.git
