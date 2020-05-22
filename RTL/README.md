@@ -21,6 +21,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E), [Slides](examples/mmio_mc_read/mmio_mc_read.pptx)
 1. [Example: dma_loopback](examples/dma_loopback)
     - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
+    - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
 
 # DevCloud Instructions
 
