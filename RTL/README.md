@@ -19,8 +19,8 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 7. [Example: mmio_mc_read](examples/mmio_mc_read)
     - Description: Illustrates how to use CCI-P to implement multi-cyle MMIO reads to inferface with resources other than registers.
     - [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E), [Slides](examples/mmio_mc_read/mmio_mc_read.pptx)
-8. mmio_ram (TO BE ADDED)
-    - Description: Illustrates how to use CCI-P to access the host processor's memory from within the AFU.
+8. [Example: dma_loopback](examples/dma_loopback)
+    - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
 
 # DevCloud Instructions
 
