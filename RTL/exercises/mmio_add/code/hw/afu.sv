@@ -7,7 +7,7 @@
 // Description:  Implements an AFU that adds two numbers from memory-mapped registers, and
 //               stores the result in a third memory-mapped reigster.
 //
-//               This code assumes the reader has studies the ccio_mmio example provided
+//               This code assumes the reader has studied the ccio_mmio example provided
 //               along with this exercise.
 //
 //               See TODO comments to determine what to complete for the exercise.
@@ -28,7 +28,7 @@ module afu
    output t_if_ccip_Tx tx
    );
 
-   logic [127:0] afu_id = `AFU_ACCEL_UUID;
+   localparam [127:0] afu_id = `AFU_ACCEL_UUID;
 
    // Get mmio request header.
    t_ccip_c0_ReqMmioHdr mmio_hdr;
@@ -49,7 +49,7 @@ module afu
           end
         else
           begin
-             if (rx.c0.mmioWrValid == 1)
+             if (rx.c0.mmioWrValid)
                begin
                   case (mmio_hdr.address)
 		    // TODO : Implement writes to each adder input register
@@ -63,9 +63,9 @@ module afu
           end
      end
 
-   // ============================================================= 		    
+   // =============================================================    
    // MMIO read code
-   // ============================================================= 		    
+   // =============================================================     
    always_ff @(posedge clk or posedge rst) 
      begin
         if (rst)
@@ -79,12 +79,12 @@ module afu
           end
         else
           begin
-             tx.c2.mmioRdValid <= 0;
+             tx.c2.mmioRdValid <= 1'b0;
 
-             if (rx.c0.mmioRdValid == 1'b1)
+             if (rx.c0.mmioRdValid)
                begin
                   tx.c2.hdr.tid <= mmio_hdr.tid;
-                  tx.c2.mmioRdValid <= 1;
+                  tx.c2.mmioRdValid <= 1'b1;
 
                   case (mmio_hdr.address)
 		    

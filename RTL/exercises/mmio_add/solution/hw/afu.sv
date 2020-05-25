@@ -7,7 +7,7 @@
 // Description:  Implements an AFU that adds two numbers from memory-mapped registers, and
 //               stores the result in a third memory-mapped reigster.
 //
-//               This code assumes the reader has studies the ccio_mmio example provided
+//               This code assumes the reader has studied the ccio_mmio example provided
 //               along with this exercise.
 //
 // For more information on CCI-P, see the Intel Acceleration Stack for Intel Xeon CPU with 
@@ -26,7 +26,7 @@ module afu
    output t_if_ccip_Tx tx
    );
 
-   logic [127:0] afu_id = `AFU_ACCEL_UUID;
+   localparam [127:0] afu_id = `AFU_ACCEL_UUID;
 
    // User registers (memory mapped to address h0020, h0022, and h0024)
    logic [63:0]  add_in0_r, add_in1_r, add_out_r;
@@ -44,7 +44,7 @@ module afu
      begin
 	if (rst)
 	  begin
-	     add_out_r <= 0;	     
+	     add_out_r <= '0;	     
 	  end
 	else
 	  begin
@@ -59,12 +59,12 @@ module afu
      begin 
         if (rst)
           begin 
-	     add_in0_r <= 0;
-	     add_in1_r <= 0;	     
+	     add_in0_r <= '0;
+	     add_in1_r <= '0;	     
           end
         else
           begin
-             if (rx.c0.mmioWrValid == 1)
+             if (rx.c0.mmioWrValid)
                begin
                   case (mmio_hdr.address)
 		    // Only allow MMIO writes to the adder inputs
@@ -77,9 +77,9 @@ module afu
           end
      end
 
-   // ============================================================= 		    
+   // ============================================================= 	      
    // MMIO read code
-   // ============================================================= 		    
+   // ============================================================= 	    
    always_ff @(posedge clk or posedge rst) 
      begin
         if (rst)
@@ -93,12 +93,12 @@ module afu
           end
         else
           begin
-             tx.c2.mmioRdValid <= 0;
+             tx.c2.mmioRdValid <= 1'b0;
 
-             if (rx.c0.mmioRdValid == 1'b1)
+             if (rx.c0.mmioRdValid)
                begin
                   tx.c2.hdr.tid <= mmio_hdr.tid;
-                  tx.c2.mmioRdValid <= 1;
+                  tx.c2.mmioRdValid <= 1'b1;
 
                   case (mmio_hdr.address)
 		    
