@@ -1,7 +1,3 @@
-// Greg Stitt
-// Kevin Ferreira
-// University of Florida
-//
 // Module Name:  afu.sv
 // Project:      mmio_add
 // Description:  Implements an AFU that adds two numbers from memory-mapped registers, and
