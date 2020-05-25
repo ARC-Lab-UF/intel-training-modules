@@ -37,7 +37,7 @@ module memory_map
    input done
    );
 
-   logic [127:0] afu_id = `AFU_ACCEL_UUID;
+   localparam [127:0] afu_id = `AFU_ACCEL_UUID;
 
    // Fib input registers (memory mapped to address h0020, h0022).
    logic go_r;
@@ -58,17 +58,17 @@ module memory_map
      begin 
         if (rst)
           begin
-	     go_r <= 0;
-	     n_r  <= 0;	    
+	     go_r <= '0;
+	     n_r  <= '0;	    
           end
         else 
           begin
 	     // Clear go every cycle to ensure an MMIO write only
 	     // creates a 1-cycle high pulse. This saves a PCIe
 	     // transfer to clear the go signal.
-	     go_r <= 0;
+	     go_r <= 1'b0;
 	     	     
-             if (rx.c0.mmioWrValid == 1)
+             if (rx.c0.mmioWrValid)
                begin
                   case (mmio_hdr.address)
                     16'h0020: go_r <= rx.c0.data[0];
@@ -78,9 +78,9 @@ module memory_map
           end
      end
 
-   // ============================================================= 		    
+   // =============================================================    
    // MMIO read code
-   // ============================================================= 		    
+   // =============================================================	    
    always_ff @(posedge clk or posedge rst) 
      begin
         if (rst)
@@ -94,15 +94,15 @@ module memory_map
           end
         else
           begin
-             tx.c2.mmioRdValid <= 0;
+             tx.c2.mmioRdValid <= 1'b0;
 
-             if (rx.c0.mmioRdValid == 1'b1)
+             if (rx.c0.mmioRdValid)
                begin
                   tx.c2.hdr.tid     <= mmio_hdr.tid;
-                  tx.c2.mmioRdValid <= 1;
+                  tx.c2.mmioRdValid <= 1'b1;
 
 		  // By default, set all data bits to 0 to save code below
-		  tx.c2.data <= 0;
+		  tx.c2.data <= '0;
 		  
                   case (mmio_hdr.address)
 		    
