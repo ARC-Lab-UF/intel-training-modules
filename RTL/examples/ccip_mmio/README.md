@@ -34,7 +34,8 @@ easier to get started.
 * [Slides that explain CCI-P and the corresonding SystemVerilog code](./intel_pac_rtl_ccip.pptx).
 * [A video presentation of the slides](https://youtu.be/e03xuTsQ4fQ)
 
-# [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 # [Synthesis Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-instructions)
+# [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
+
 
