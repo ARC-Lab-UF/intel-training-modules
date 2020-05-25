@@ -38,66 +38,6 @@ easier to get started.
 [A video presentation of the slides](https://youtu.be/e03xuTsQ4fQ)
 
 
-# Simulation with ASE:
+# [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/README.md#simulation-with-ase)
 
-  If not running on the DevCloud, ensure that the OPAE SDK is properly installed.  
-  OPAE SDK scripts must be on PATH and include files and libraries must be available
-  to the C compiler.  In addition, ensure that the OPAE_PLATFORM_ROOT
-  environment variable is set.
-
-  A set of scripts is provided for running all the sample workloads.
-  In this case, however, we will not use them.  Instead, we will introduce
-  the underlying OPAE SDK scripts that they invoke.  AFU designers are free
-  to incorporate either option into their workflows.
-
-  Simulation requires two software processes: one for RTL simulation and
-  the other to run the connected software.  To construct an RTL simulation
-  environment execute the following in the directory containing this
-  README:
-
-    $ afu_sim_setup --source hw/filelist.txt sim
-
-  This will construct an ASE environment in the build_sim subdirectory.  If
-  the command fails, confirm that afu_sim_setup is on your PATH (in the
-  OPAE SDK bin directory), that your Python version is at least 2.7 and
-  that the jsonschema Python package is installed
-  (https://pypi.python.org/pypi/jsonschema).
-
-  To build and execute the simulator:
-
-    $ cd sim
-    $ make
-    $ make sim
-
-  This will build and run the RTL simulator.  If this step fails it is
-  likely that your RTL simulator is not installed properly.  ModelSim,
-  Questa and VCS are supported.
-
-  The simulator prints a message that it is ready for simulation.  It also
-  prints a message to set the ASE_WORKDIR environment variable.  Open
-  another shell and cd to the directory holding this README.  To build and
-  run the software:
-
-    $ <Set ASE_WORKDIR as directed by the simulator>
-    $ cd sw
-    $ make clean
-    $ make
-    $ ./afu_ase
-
-  Make sure to use the ./afu_ase executable and not the ./afe executable, 
-  which will look for an actual FPGA and not an ASE simulation environment.
-  
-  To run the simulation without the verbose logging, do the following:
-  
-    $ ASE_LOG=0 ./afu_ase
-  
-
-# Synthesis with Quartus:
-
-  See [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) for how to synthesize and configure a PAC with the resulting bitfile.
- 
-  To execute the software application, run the following:
-  
-    $ ./afu
-  
-  Make sure to not run the simulation verision ./afu_ase.
+# [Synthesis with Quartus](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-with-quartus)
