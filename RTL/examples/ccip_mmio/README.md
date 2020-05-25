@@ -38,6 +38,5 @@ easier to get started.
 [A video presentation of the slides](https://youtu.be/e03xuTsQ4fQ)
 
 
-# [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/README.md#simulation-with-ase)
-
-# [Synthesis with Quartus](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-with-quartus)
+# [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
+# [Synthesis Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-instructions)
