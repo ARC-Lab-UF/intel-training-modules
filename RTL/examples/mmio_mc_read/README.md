@@ -88,14 +88,14 @@ reads that interface with resources other than registers.
     $ ${OPAE_PLATFORM_ROOT}/bin/run.sh
 
   run.sh will invoke Quartus, which must be properly installed if you are not on the DevCloud.  The end
-  result will be a file named afu.gbs in the synth directory.
-  This GBS file may be loaded onto a compatible FPGA using OPAE's fpgaconf
-  tool. If you are running on the DevCloud, here is an example:
-    
-    $ fpgaconf -B 0x3b afu.gbs
+  result will be a file named afu.gbs in the synth directory. Next, load the bitfile onto the PAC as 
+  specified in the [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions).
+  
+  If you get errors when running these scripts, see the [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) for how to synthesize and configure a PAC with the resulting bitfile.
  
   To execute the software application, run the following:
   
     $ ./afu
   
   Make sure to not run the simulation verision ./afu_ase.
+ 
