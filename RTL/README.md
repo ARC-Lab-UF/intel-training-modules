@@ -24,7 +24,9 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 1. [Example: dma_loopback](examples/dma_loopback)
     - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
     - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
-    
+
+# [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
+
 # Simulation Instructions:
 
   Unless stated differently for a specific example, the following instructions should 
