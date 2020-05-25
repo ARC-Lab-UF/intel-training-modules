@@ -25,7 +25,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
     - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
     
-# Simulation with ASE:
+# Simulation Instructions:
 
   Unless stated differently for a specific example, the following instructions should 
   work for simulating an AFU and corresponding software. **Note that The Intel DevCloud does not currently
@@ -80,7 +80,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     $ ASE_LOG=0 ./afu_ase
   
 
-# Synthesis with Quartus:
+# Synthesis Instructions:
 
   RTL simulation and synthesis are driven by the same filelist.txt and
   underlying OPAE scripts.  To construct a Quartus synthesis environment
