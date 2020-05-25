@@ -2,8 +2,10 @@
 
 These examples illustrate how to design AFUs for the Intel PAC using RTL code. The [examples](examples/) folder includes simple examples that explain the basic concepts of AFU design. The [exercises](exercises/) folder contains practice examples that provide skeleton code to get started, along with completed solutions.
 
+
 # Suggested Study Order
 
+1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 1. [Video: Intel PAC Overview](https://youtu.be/HatHuLtZ5-0), [Slides](../intel_pac_overview.pptx)   
 1. [Example: ccip_mmio](examples/ccip_mmio)
     - Description: Illustrates how to create a basic AFU that provides a memory-mapped register, and how to communicate with that register from C++ software.
@@ -22,13 +24,6 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 1. [Example: dma_loopback](examples/dma_loopback)
     - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
     - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
-
-# DevCloud Instructions
-
-[Explanation for how to register, connect, and use the DevCloud for these exercises](https://github.com/intel/FPGA-Devcloud).
-
-[Quickstart Guide for Arria 10 PAC](https://github.com/intel/FPGA-Devcloud/tree/master/main/QuickStartGuides/RTL_AFU_Program_PAC_Quickstart/Arria10)
-
-To clone this repository on the DevCloud, login after using the above instructions and then do git clone https://github.com/ARC-Lab-UF/intel-training-modules.git.
-
+    
+    
 
