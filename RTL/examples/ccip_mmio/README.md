@@ -94,20 +94,7 @@ easier to get started.
 
 # Synthesis with Quartus:
 
-  RTL simulation and synthesis are driven by the same filelist.txt and
-  underlying OPAE scripts.  To construct a Quartus synthesis environment
-  for this AFU, enter:
-
-    $ afu_synth_setup --source hw/filelist.txt synth
-    $ cd synth
-    $ ${OPAE_PLATFORM_ROOT}/bin/run.sh
-
-  run.sh will invoke Quartus, which must be properly installed if you are not on the DevCloud.  The end
-  result will be a file named afu.gbs in the synth directory.
-  This GBS file may be loaded onto a compatible FPGA using OPAE's fpgaconf
-  tool. If you are running on the DevCloud, here is an example:
-    
-    $ fpgaconf -B 0x3b afu.gbs
+  See [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) for how to synthesize and configure a PAC with the resulting bitfile.
  
   To execute the software application, run the following:
   
