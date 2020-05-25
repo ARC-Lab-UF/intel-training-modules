@@ -94,13 +94,14 @@ module afu
    // $clog2 is a very useful function for computing the number of bits based on an
    // amount. For example, if we have 3 status registers, we would need ceiling(log2(3)) = 2
    // bits to address all the registers.
-   logic [$clog2(NUM_CSR)-1:0] csr_index_rd, csr_index_wr;
+   localparam CSR_WIDTH = $clog2(NUM_CSR);
+   logic [CSR_WIDTH-1:0] csr_index_rd, csr_index_wr;
 
    // Block RAM signals.
    // Similarly, $clog2 is used here to calculated the width of the address lines
    // based on the number of words.
    logic 		       bram_wr_en;
-   logic [$clog2(BRAM_WORDS)-1:0] bram_wr_addr, bram_rd_addr, bram_addr;
+   logic [BRAM_ADDR_WIDTH-1:0] bram_wr_addr, bram_rd_addr, bram_addr;
    logic [BRAM_DATA_WIDTH-1:0] 	  bram_rd_data;
 
    // MMIO address after applying the offset of base MMIO address of the BRAM. 
@@ -147,8 +148,11 @@ module afu
       // to align with the output of the block RAM read.
       csr_offset_addr_wr = mmio_hdr.address - CSR_BASE_MMIO_ADDR;
       csr_offset_addr_rd = addr_delayed - CSR_BASE_MMIO_ADDR;
-      csr_index_wr = csr_offset_addr_wr[$size(csr_index_wr):1];
-      csr_index_rd = csr_offset_addr_rd[$size(csr_index_rd):1];
+
+      // I would prefer to just use $size(csr_index_wr) but Quartus reports
+      // an incorrect watning that csr_index_wr is used before assigned.
+      csr_index_wr = csr_offset_addr_wr[CSR_WIDTH:1];
+      csr_index_rd = csr_offset_addr_rd[CSR_WIDTH:1];
       
       // Subtract the BRAM address offset from the MMIO address to align the
       // MMIO addresses with the BRAM words. The divide by two (shift right) accounts for
@@ -157,7 +161,7 @@ module afu
       // e.g. MMIO BRAM_BASE_MMIO_ADDR = BRAM address 0
       // e.g. MMIO BRAM_BAS_MMIO_ADDR+2 = BRAM address 1       
       bram_offset_addr = mmio_hdr.address - BRAM_BASE_MMIO_ADDR;	
-      bram_addr = bram_offset_addr[$size(bram_addr):1];
+      bram_addr = bram_offset_addr[BRAM_ADDR_WIDTH:1];
 
       // Define the bram write address.
       bram_wr_addr = bram_addr;
@@ -165,9 +169,9 @@ module afu
       // Write to the block RAM when there is a MMIO write request and the address falls
       // within the range of the BRAM
       if (rx.c0.mmioWrValid && (mmio_hdr.address >= BRAM_BASE_MMIO_ADDR && mmio_hdr.address <= BRAM_UPPER_MMIO_ADDR ))
-	bram_wr_en = 1;
+	bram_wr_en = 1'b1;
       else
-	bram_wr_en = 0;	
+	bram_wr_en = 1'b0;	
    end    
 
    // Sequential logic to create all registers.
@@ -175,7 +179,7 @@ module afu
       if (rst) begin 
 	 // Asynchronous reset for the CSRs.
 	 for (int i=0; i < NUM_CSR; i++) begin
-	    csr[i] <= 0;
+	    csr[i] <= '0;
 	 end		       
       end
       else begin
@@ -186,7 +190,7 @@ module afu
 	 bram_rd_addr <= bram_addr;
 	 
          // Check to see if there is a valid write being received from the processor.	    
-         if (rx.c0.mmioWrValid == 1) begin
+         if (rx.c0.mmioWrValid) begin
 	    // Verify the address is within the range of CSR addresses.
 	    // If so, store into the corresponding register.
 	    // NOTE: In realistic use cases, many of the CSRs will only be writeable by
@@ -277,7 +281,7 @@ module afu
    delay_tid 
      (
       .*,
-      .en('1),
+      .en(1'b1),
       .data_in(mmio_hdr.tid),
       .data_out(tx.c2.hdr.tid)	      
       );
@@ -286,12 +290,12 @@ module afu
    delay 
      #(
        .CYCLES(BRAM_RD_LATENCY),
-       .WIDTH($size(rx.c0.mmioRdValid))	   
+       .WIDTH($bits(rx.c0.mmioRdValid))	   
        )
    delay_valid 
      (
       .*,
-      .en('1),
+      .en(1'b1),
       .data_in(rx.c0.mmioRdValid),
       .data_out(mmioRdValid_delayed)	      
       );
@@ -307,7 +311,7 @@ module afu
    delay_addr 
      (
       .*,
-      .en('1),
+      .en(1'b1),
       .data_in(mmio_hdr.address),
       .data_out(addr_delayed)	      
       );
