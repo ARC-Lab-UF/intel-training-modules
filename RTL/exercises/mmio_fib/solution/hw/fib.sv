@@ -52,12 +52,12 @@ module fib
    always_ff @(posedge clk or posedge rst) begin
       if (rst) begin
 	 state 	<= START;
-	 result <= 0;
-	 done 	<= 0;
-	 n_r 	<= 0;	 
-	 i 	<= 0;
-	 x 	<= 0;
-	 y 	<= 0;	 
+	 result <= '0;
+	 done 	<= '0;
+	 n_r 	<= '0;	 
+	 i 	<= '0;
+	 x 	<= '0;
+	 y 	<= '0;	 
       end 
       else begin
 	 case (state)
@@ -68,7 +68,7 @@ module fib
 		 // This clears done the cycle after the circuit is
 		 // started. To clear done within the same cycle, done
 		 // should be changed to combinational logic.
-		 done  <= 0;		 
+		 done  <= 1'b0;		 
 	      end
 	   end
 	   
@@ -109,7 +109,7 @@ module fib
 
 	   COMPLETE: begin
 	      result <= y;
-	      done   <= 1;
+	      done   <= 1'b1;
 	      if (!go) begin
 		 state <= START;		 
 	      end	     
