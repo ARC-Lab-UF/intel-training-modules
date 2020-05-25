@@ -20,21 +20,22 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 # Introduction
 
 This example illustruates a simple AFU that implements a Fibonacci calculator. 
-Software running on the host processor sends...ADDLATER.
+Software running on the host processor sends an input *n* to the AFU, which 
+specifies the which Fibonacci number to calculate. The software then sends a *go*
+signal to the AFU, and then continuously reads a *done* signal until the AFU
+has completed. Upon completion, software reads the result from the AFU. 
+All communication is handled over MMIO.
 
-To complete the exercise, the user must create a 64-bit adder with registered
-inputs and outputs that should be memory mapped for communication of CCI-P.
-The software should then write to the input registers of the adder and read from
-the output register over CCI-P to perform a number of add operations.
+To complete the exercise, the user must implement the corresponding memory map
+that implements the communication described above. All memory map functionality 
+should be made in [code/hw/memory_map.sv](code/hw/memory_map.sv).
 
-To perform the exercise, use the code in the [code directory](code/). All RTL
-modifications should be made in [code/hw/afu.sv](code/hw/afu.sv). Search the comments for TODO
-statements that explain what needs to be done. Do the same for the software
-by completing the TODO statements in [code/sw/main.cpp](code/sw/main.cpp).
+After implementing the memory map, the user should complete the exercise by 
+creating the Fibonacci calculator within [code/hw/fib.sv](code/hw/fib.sv).
+No other files need to be modified.
 
-Note that this example is purely for explanation of how to create AFUs. An 
-AFU that simply implements an adder would be very inefficent compared to just
-doing the addition in software.
+Search the comments for TODO statements that explain what needs to be done. 
+Do the same for the software by completing the TODO statements in [code/sw/main.cpp](code/sw/main.cpp).
 
 [A completed solution is available in solution/](solution/) for comparison once the user has
 completed the exercise.
