@@ -16,4 +16,7 @@ Here is an [overview of the Intel PAC](https://www.youtube.com/watch?v=HatHuLtZ5
 
 - To clone this repository on the DevCloud, login after using the above instructions and then run: 
     
-    git clone https://github.com/ARC-Lab-UF/intel-training-modules.git
+```
+    $ git clone https://github.com/ARC-Lab-UF/intel-training-modules.git   
+```
+    
