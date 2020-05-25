@@ -27,6 +27,8 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
 
 [Explanation for how to register, connect, and use the DevCloud for these exercises](https://github.com/intel/FPGA-Devcloud).
 
+[Quickstart Guide for Arria 10 PAC](https://github.com/intel/FPGA-Devcloud/tree/master/main/QuickStartGuides/RTL_AFU_Program_PAC_Quickstart/Arria10)
 
+To clone this repository on the DevCloud, login after using the above instructions and then do git clone https://github.com/ARC-Lab-UF/intel-training-modules.git.
 
 
