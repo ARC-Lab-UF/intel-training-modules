@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
     AFU afu(AFU_ACCEL_UUID); 
     bool failed = false;
 
-    cout << "AFU Clock Frequency: " << afu.measureClock() << endl;
+    cout << "Measured AFU Clock Frequency: " << afu.measureClock() / 1e6
+	 << "MHz" << endl;
 
     for (unsigned test=0; test < num_tests; test++) {
 

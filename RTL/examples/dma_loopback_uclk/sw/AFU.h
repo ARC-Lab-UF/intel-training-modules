@@ -95,7 +95,7 @@ public:
   }  
   
   void free(volatile void *ptr);
-  float measureClock(unsigned ms=1000);
+  float measureClock(unsigned ms=100);
 
 protected: 
 
