@@ -26,6 +26,22 @@ that the output array is the same as the input array after FPGA execution.
 - [Video: Explanation of HAL DMA interface](https://www.youtube.com/watch?v=q94xiWhug6c)
 - [Slides](./dma_hal.pptx)
 
+In addition to demonstrating DMA functionality, this example shows how to modify the default synthesis options created by the afu_synth_setup script. Within the hw/ folder, there is an [hw/afu.qsf](hw/afu.qsf) file that contains a synthesis option to enable pass-through logic on inferred RAMs on the fifo module. Although whenever possible, pass-through logic should be avoided, it is required by a provided FIFO in this example. Without this option, the code does not work on the PAC because the generated Quartus setting disable the required pass-through logic.
+
+To enable the afu_synth_setup script to add this qsf file to the generated quartus project, the sources file [hw/filelist.txt](hw/filelist.txt) contains the following line:
+
+```
+QI:afu.qsf
+```
+
+The QI: prefix tells the scripts that the corresponding file contains Quartus settings. In the same sources file, there is another  line with new functionality:
+
+```
+C:${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/hw/rtl/cci_mpf_sources.txt
+```
+
+The C: prefix tells the scripts to recursively add the specified file as additional sources. The corresponding file in this case defines the sources for the Intel MPF Basic Building Block, which handles all virtual-to-physical address translation, and data reordering.
+
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 # [Synthesis Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-instructions)
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
