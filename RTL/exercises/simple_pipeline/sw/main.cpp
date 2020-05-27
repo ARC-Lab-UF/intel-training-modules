@@ -42,15 +42,20 @@ using namespace std;
 
 
 void printUsage(char *name);
-bool checkUsage(int argc, char *argv[], unsigned long &size, unsigned long &num_tests);
+bool checkUsage(int argc, char *argv[], unsigned long &num_inputs);
 
 int main(int argc, char *argv[]) {
 
-  unsigned long size, num_tests;
-  if (!checkUsage(argc, argv, size, num_tests)) {
+  unsigned long num_inputs;
+  unsigned long num_outputs;
+
+  if (!checkUsage(argc, argv, num_inputs)) {
     printUsage(argv[0]);
     return EXIT_FAILURE;
   }
+
+  // There are 16 inputs for every 1 output.
+  num_outputs = num_inputs / 16;
 
   try {
     // Create an AFU object to provide basic services for the FPGA. The 
@@ -62,72 +67,49 @@ int main(int argc, char *argv[]) {
     cout << "Measured AFU Clock Frequency: " << afu.measureClock() / 1e6
 	 << "MHz" << endl;
 
-    for (unsigned test=0; test < num_tests; test++) {
+    // Allocate input and output arrays.
+    auto input  = afu.malloc<volatile unsigned long>(num_inputs);
+    auto output = afu.malloc<volatile unsigned long long>(num_outputs);  
 
-      // Allocate memory for the FPGA. Any memory used by the FPGA must be 
-      // allocated with AFU::malloc(), or AFU::mallocNonvolatile() if you
-      // want to pass the pointer to a function that does not have the volatile
-      // qualifier. Use of non-volatile pointers is not guaranteed to work 
-      // depending on the compiler.   
-      auto input  = afu.malloc<dma_data_t>(size);
-      auto output  = afu.malloc<dma_data_t>(size);  
-
-      cout << "Starting Test " << test << "...";
-
-      // Initialize the input and output memory.
-      for (unsigned i=0; i < size; i++) {
-	input[i] = (dma_data_t) rand();
-	output[i] = 0;
-      }
-    
-      // Inform the FPGA of the starting read and write address of the arrays.
-      afu.write(MMIO_RD_ADDR, (uint64_t) input);
-      afu.write(MMIO_WR_ADDR, (uint64_t) output);
-
-      // The FPGA DMA only handles cache-line transfers, so we need to convert
-      // the array size to cache lines.
-      unsigned total_bytes = size*sizeof(dma_data_t);
-      unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
-      afu.write(MMIO_SIZE, num_cls);
-
-      // Start the FPGA DMA transfer.
-      afu.write(MMIO_GO, 1);  
-
-      // Wait until the FPGA is done.
-      while (afu.read(MMIO_DONE) == 0) {
-#ifdef SLEEP_WHILE_WAITING
-	this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
-#endif
-      }
-        
-      // Verify correct output.
-      // NOTE: This could be replaced with memcp, but that is only possible
-      // when not using volatile data (i.e. AFU::mallocNonvolatile()). 
-      unsigned errors = 0;
-      for (unsigned i=0; i < size; i++) {
-	if (output[i] != input[i]) {
-	  errors++;
-	}
-      }
-
-      if (errors > 0) {
-	cout << "Failed with " << errors << " errors." << endl;
-	failed = true;
-      }
-      else {
-	cout << "Succeeded." << endl;
-      }
-    
-      // Free the allocated memory.
-      afu.free(input);
-      afu.free(output);
-    } 
-
-    if (failed) {
-      cout << "DMA tests failed." << endl;
-      return EXIT_FAILURE;
+    // Initialize the input and output arrays.
+    for (unsigned i=0; i < num_inputs; i++) {      
+      input[i] = (unsigned long) 1;
     }
 
+    for (unsigned i=0; i < num_outputs; i++) {      
+      output[i] = (unsigned long) 0;
+    }   
+    
+    // Inform the FPGA of the starting read and write address of the arrays.
+    afu.write(MMIO_RD_ADDR, (uint64_t) input);
+    afu.write(MMIO_WR_ADDR, (uint64_t) output);
+
+    // The FPGA DMA only handles cache-line transfers, so we need to convert
+    // the array size to cache lines. We could also do this conversion on the 
+    // FPGA and transfer the number of inputs instead here.
+    // The number of output cache lines is calculated by the FPGA.
+    unsigned total_bytes = num_inputs*sizeof(unsigned long);
+    unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
+    afu.write(MMIO_SIZE, num_cls);
+
+    // Start the FPGA DMA transfer.
+    afu.write(MMIO_GO, 1);  
+
+    // Wait until the FPGA is done.
+    while (afu.read(MMIO_DONE) == 0) {
+#ifdef SLEEP_WHILE_WAITING
+      this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
+#endif
+    }
+        
+    for (unsigned i=0; i < num_outputs; i++) {     
+      cout << output[i] << endl;
+    }
+
+       // Free the allocated memory.
+    afu.free(input);
+    afu.free(output);
+        
     cout << "All DMA Tests Successful!!!" << endl;
     return EXIT_SUCCESS;
   }
@@ -162,8 +144,7 @@ int main(int argc, char *argv[]) {
 void printUsage(char *name) {
 
   cout << "Usage: " << name << " size num_tests\n"     
-       << "size (positive integer amount of dma_data_t to transfer)\n"
-       << "num_tests (positive integer amount of \"size\" DMA tests to run)" 
+       << "size (positive integer for number of inputs to test, must be multiple of 128)\n"
        << endl;
 }
 
@@ -182,13 +163,13 @@ unsigned long stringToPositiveInt(char *str) {
 }
 
 
-bool checkUsage(int argc, char *argv[], 
-		unsigned long &size, unsigned long &num_tests) {
+bool checkUsage(int argc, char *argv[], unsigned long &num_inputs) {
   
-  if (argc == 3) {
+  if (argc == 2) {
     try {
-      size = stringToPositiveInt(argv[1]);
-      num_tests = stringToPositiveInt(argv[2]);
+      num_inputs = stringToPositiveInt(argv[1]);
+      if (num_inputs % 128 != 0)
+	return false;
     }
     catch (const runtime_error& e) {    
       return false;
