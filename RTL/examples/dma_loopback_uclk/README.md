@@ -17,14 +17,23 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 
 # Introduction
 
-This example demonstrates how to read from and write to the host-processor's memory from the AFU. Due to the difficulties of
-using CCI-P directly for accessing RAM, the example introduces a hardware-abstraction layer (HAL) that provides a simple
-DMA interface. The AFU uses that DMA interface to provide simple loopback functionality that reads an input array from memory
-and then writes the corresponding data to a different array. Corresponding software initializes the input array and verifies
-that the output array is the same as the input array after FPGA execution.
+This example modifies the earlier [dma_loopback](../dma_loopback) example by modifying the afu.json file so that the AFU uses
+the programmable user clock instead of the primary clock. The code also measures the clock frequency to verify that the 
+requested clock is actually used on the PAC.
 
-- [Video: Explanation of HAL DMA interface](https://www.youtube.com/watch?v=q94xiWhug6c)
-- [Slides](./dma_hal.pptx)
+The clock frequency can be changed to any frequency by modifying this line in [hw/afu.son](hw/afu.json):
+
+```
+"clock-frequency-high": "auto-300.0",
+```
+
+This setting requests that Quartus compile the design with a 300 MHz clock. The "auto" prefix states to update the clock 
+frequency if necessary if 300 MHz isn't possible. For full documentation of the JSON options, see the following:
+
+https://www.intel.com/content/www/us/en/programmable/documentation/bfr1522087299048.html
+
+However, note that many of the options discussed in that documentation are not currently supported in the OPAE installation
+on the Intel DevCloud. At the time that this example was tested, the clock setting had to be "auto-\<float\>". 
 
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 # [Synthesis Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-instructions)
