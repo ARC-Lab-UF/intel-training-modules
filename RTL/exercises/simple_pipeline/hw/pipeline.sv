@@ -20,7 +20,7 @@ module pipeline
    logic 			   delay_r[LATENCY];  
  
    // Create a pipelined multiply-accumulate tree.
-   always_ff @ (posedge clk) begin
+   always_ff @ (posedge clk or posedge rst) begin
 
       if (rst) begin
 	 // Although it is ok to reset all the internal pipeline registers, I
@@ -51,12 +51,12 @@ module pipeline
 
 	 // Add pairs of multiplication outputs.
 	 for (int i=0; i < 4; i++) begin
-	    add_out_l1_r[i] <= mult_out_r[i*2] * mult_out_r[i*2+1];
+	    add_out_l1_r[i] <= mult_out_r[i*2] + mult_out_r[i*2+1];
 	 end;
 
 	 // Add pairs of previous adds.
 	 for (int i=0; i < 2; i++) begin
-	    add_out_l2_r[i] <= add_out_l1_r[i*2] * add_out_l1_r[i*2+1];
+	    add_out_l2_r[i] <= add_out_l1_r[i*2] + add_out_l1_r[i*2+1];
 	 end;
 
 	 // Add the final two adder outputs to get the result.

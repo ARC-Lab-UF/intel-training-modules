@@ -191,8 +191,7 @@ module afu
    
    // Read from the absorption FIFO when there is data in it, and when the 
    // output buffer is not full.     
-   logic fifo_rd;
-   assign fifo_rd = !fifo_empty && !output_buffer_full;   
+   assign fifo_rd_en = !fifo_empty && !output_buffer_full;   
    
    // Pack results into a cache line to write to memory.
    always_ff @ (posedge clk or posedge rst) begin
@@ -204,7 +203,7 @@ module afu
 	 // Whenever something is read from the absorption fifo, shift the 
 	 // output buffer to the right and append the data from the FIFO to 
 	 // the front of the buffer.	 
-	 if (fifo_rd) begin
+	 if (fifo_rd_en) begin
 	    output_buffer_r <= {fifo_rd_data, 
 				output_buffer_r[CL_DATA_WIDTH-1:RESULT_WIDTH]};
 
