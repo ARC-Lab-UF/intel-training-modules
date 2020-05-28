@@ -187,7 +187,7 @@ module afu
    // The output buffer is full when it contains RESULT_PER_CL results (i.e.,
    // a full cache line) to write to memory.
    logic output_buffer_full;
-   assign output_buffer_full = result_count_r == RESULTS_PER_CL;      
+   assign output_buffer_full = (result_count_r == RESULTS_PER_CL) && !dma.wr_en;
    
    // Read from the absorption FIFO when there is data in it, and when the 
    // output buffer is not full.     
@@ -199,7 +199,13 @@ module afu
       if (rst) begin
 	 result_count_r <= '0;
       end
-      else begin	 
+      else begin
+	 // Every time the DMA writes a cache line, reset the result count.
+	 if (dma.wr_en) begin
+	    // Must be blocking assignment in case fifo_rd_en is also asserted.
+	    result_count_r = '0;
+	 end        		 
+	 
 	 // Whenever something is read from the absorption fifo, shift the 
 	 // output buffer to the right and append the data from the FIFO to 
 	 // the front of the buffer.	 
@@ -211,11 +217,6 @@ module afu
 	    // a full cache line when result_count_r reaches RESULTS_PER_CL.
 	    result_count_r ++;
 	 end
-
-	 // Every time the DMA writes a cache line, reset the result count.
-	 if (dma.wr_en) begin
-	   result_count_r <= '0;
-	 end        		 
       end
    end // always_ff @
       
