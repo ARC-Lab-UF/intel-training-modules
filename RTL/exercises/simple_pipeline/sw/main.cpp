@@ -48,16 +48,19 @@ uint64_t getCorrectOutput(volatile uint32_t input[], unsigned output_id);
 
 int main(int argc, char *argv[]) {
 
+  unsigned long num_output_cls;
   unsigned long num_inputs;
   unsigned long num_outputs;
 
-  if (!checkUsage(argc, argv, num_inputs)) {
+  if (!checkUsage(argc, argv, num_output_cls)) {
     printUsage(argv[0]);
     return EXIT_FAILURE;
   }
-
-  // There are 16 inputs for every 1 output.
-  num_outputs = num_inputs / 16;
+  
+  // There are 8 64-bit outputs per cache line.
+  num_outputs = num_output_cls * 8;
+  // There are 16 32-bit inputs per output.
+  num_inputs = num_outputs * 16;
 
   try {
     // Create an AFU object to provide basic services for the FPGA. The 
@@ -105,7 +108,6 @@ int main(int argc, char *argv[]) {
     for (unsigned i=0; i < num_outputs; i++) {     
       if (output[i] != getCorrectOutput(input, i)) {
 	errors ++;
-	cout << "ERROR: " << output[i] << " " << getCorrectOutput(input,i) << endl;
       }
     }
 
@@ -150,8 +152,8 @@ int main(int argc, char *argv[]) {
 
 void printUsage(char *name) {
 
-  cout << "Usage: " << name << " size num_tests\n"     
-       << "size (positive integer for number of inputs to test, must be multiple of 128)\n"
+  cout << "Usage: " << name << " size\n"     
+       << "size (positive integer for number of output cache lines to test. Every output cache line adds 8 32-bit outputs and 128 64-bit inputs.)\n"
        << endl;
 }
 
@@ -170,13 +172,11 @@ unsigned long stringToPositiveInt(char *str) {
 }
 
 
-bool checkUsage(int argc, char *argv[], unsigned long &num_inputs) {
+bool checkUsage(int argc, char *argv[], unsigned long &num_output_cls) {
   
   if (argc == 2) {
     try {
-      num_inputs = stringToPositiveInt(argv[1]);
-      if (num_inputs % 128 != 0)
-	return false;
+      num_output_cls = stringToPositiveInt(argv[1]);
     }
     catch (const runtime_error& e) {    
       return false;
