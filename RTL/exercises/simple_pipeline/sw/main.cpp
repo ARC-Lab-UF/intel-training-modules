@@ -43,6 +43,8 @@ using namespace std;
 
 void printUsage(char *name);
 bool checkUsage(int argc, char *argv[], unsigned long &num_inputs);
+uint64_t getCorrectOutput(volatile uint32_t input[], unsigned output_id);
+
 
 int main(int argc, char *argv[]) {
 
@@ -64,20 +66,17 @@ int main(int argc, char *argv[]) {
     AFU afu(AFU_ACCEL_UUID); 
     bool failed = false;
 
-    cout << "Measured AFU Clock Frequency: " << afu.measureClock() / 1e6
-	 << "MHz" << endl;
-
     // Allocate input and output arrays.
-    auto input  = afu.malloc<volatile unsigned long>(num_inputs);
-    auto output = afu.malloc<volatile unsigned long long>(num_outputs);  
+    auto input  = afu.malloc<volatile uint32_t>(num_inputs);
+    auto output = afu.malloc<volatile uint64_t>(num_outputs);  
 
     // Initialize the input and output arrays.
     for (unsigned i=0; i < num_inputs; i++) {      
-      input[i] = (unsigned long) 1;
+      input[i] = rand();
     }
 
     for (unsigned i=0; i < num_outputs; i++) {      
-      output[i] = (unsigned long) 0;
+      output[i] = 0;
     }   
     
     // Inform the FPGA of the starting read and write address of the arrays.
@@ -88,7 +87,7 @@ int main(int argc, char *argv[]) {
     // the array size to cache lines. We could also do this conversion on the 
     // FPGA and transfer the number of inputs instead here.
     // The number of output cache lines is calculated by the FPGA.
-    unsigned total_bytes = num_inputs*sizeof(unsigned long);
+    unsigned total_bytes = num_inputs*sizeof(uint32_t);
     unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
     afu.write(MMIO_SIZE, num_cls);
 
@@ -101,17 +100,25 @@ int main(int argc, char *argv[]) {
       this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
 #endif
     }
-        
+
+    unsigned errors = 0;
     for (unsigned i=0; i < num_outputs; i++) {     
-      cout << output[i] << endl;
+      if (output[i] != getCorrectOutput(input, i)) {
+	errors ++;
+	cout << "ERROR: " << output[i] << " " << getCorrectOutput(input,i) << endl;
+      }
     }
 
        // Free the allocated memory.
     afu.free(input);
     afu.free(output);
         
-    cout << "All DMA Tests Successful!!!" << endl;
-    return EXIT_SUCCESS;
+    if (errors == 0) {
+      cout << "SUCCESS: all outputs correct." << endl;
+      return EXIT_SUCCESS;
+    }
+    
+    cout << "FAILURE: " << errors << " incorrect outputs." << endl;
   }
   // Exception handling for all the runtime errors that can occur within 
   // the AFU wrapper class.
@@ -180,4 +187,18 @@ bool checkUsage(int argc, char *argv[], unsigned long &num_inputs) {
   }
 
   return true;
+}
+
+
+uint64_t getCorrectOutput(volatile uint32_t input[], unsigned output_id) {
+
+  unsigned start_index = output_id*16;
+  unsigned end_index = start_index + 16;
+
+  uint64_t result = 0;
+  for (unsigned i=start_index; i < end_index; i+=2) {
+    result += (uint64_t) input[i] * (uint64_t) input[i+1];
+  }
+
+  return result;
 }
