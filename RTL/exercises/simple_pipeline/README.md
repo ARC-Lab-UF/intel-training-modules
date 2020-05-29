@@ -25,6 +25,8 @@ To ensure that the AFU doesn't have to deal with partial cache lines on the last
 
 The provided software instantiates the AFU, allocates inputs and output arrays within memory, initializes those arrays, and transfers configuration information to the AFU over MMIO. Software provides the virtual byte address of the input and output memory, and also specifies the size of the input stream to read from memory in terms of number of cachelines. The software also sends a go signal over MMIO, waits until the AFU is complete by reading from a done signal over MMIO, and then verifies the contents of the output array are correct.
 
+To complete the exercise, the user must specify the AFU within code/hw/afu.sv. See the TODO comments for hints about what needs to be done. A completed memory map is provided in code/hw/memory_map.sv. Note that any new files created by the user must be added to [code/hw/filelist.txt](code/hw/filelist.txt). The complete software is provided in [code/sw/](code/sw), which does not require changes.
+
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 
 **Example-Specific Simulation Instructions:** When using Intel ASE, it is common for Modelsim to exclude various signals from the waveform, especially arrays. Without those signals, debugging is nearly impossible. This issue is demonstrated within the provided solution for this example, where none of the internal signals within ADDLATER are included in the waveform. Fortunately, the signals can be added manually before the simulation starts. Look at [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) for an example of this. In that file, there are lines like the following:
