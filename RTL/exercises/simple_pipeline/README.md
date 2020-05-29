@@ -25,10 +25,20 @@ To ensure that the AFU doesn't have to deal with partial cache lines on the last
 
 The provided software instantiates the AFU, allocates inputs and output arrays within memory, initializes those arrays, and transfers configuration information to the AFU over MMIO. Software provides the virtual byte address of the input and output memory, and also specifies the size of the input stream to read from memory in terms of number of cachelines. The software also sends a go signal over MMIO, waits until the AFU is complete by reading from a done signal over MMIO, and then verifies the contents of the output array are correct.
 
-- [Video: Explanation of HAL DMA interface](https://www.youtube.com/watch?v=q94xiWhug6c)
-- [Slides](./dma_hal.pptx)
-
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
+
+**Example-Specific Simulation Instructions:** When using Intel ASE, it is common for Modelsim to exclude various signals from the waveform, especially arrays. Without those signals, debugging is nearly impossible. This issue is demonstrated within the provided solution for this example, where none of the internal signals within ADDLATER are included in the waveform. Fortunately, the signals can be added manually before the simulation starts. Look at [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) for an example of this. In that file, there are lines like the following:
+
+```
+add wave -expand /ase_top/platform_shim_ccip_std_afu/ccip_std_afu/hal/afu/pipeline/mult_out_r
+```
+
+This will add the array of multiplier-output registers to the waveform when the simulation is run. Repeat for other signals that you would like to monitor. For some reason, using the * will not add these signals, so to my knowledge that have to be specified individually with the complete path in the design hierarchy. Since it is easy to mistype this path, I usually open modelsim, find another signal within the module that I want, copy that design hierarchy path, and then just replace the signal name with the one I want to add.
+
+To use this solution, create the simulation using the normal afu_sim_setup script, and then copy solution/hw/vsim_run.tcl into the created directory.
+
+A similar issue commonly occurs for block RAM resources, which can be added in the same way, or can be automatically added as described in the [mmio_mc_read](../../examples/mmio_mc_read) example.
+
 # [Synthesis Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/tree/master/RTL#synthesis-instructions)
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
