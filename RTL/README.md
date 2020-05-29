@@ -26,6 +26,8 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
 1. [Example: dma_loopback_uclk](examples/dma_loopback_uclk)
     - Description: An extension of the dma_loopback example that runs the AFU on the programmable user clock (uclk) instead of the primary clock.
+1. [Exercise: simple_pipeline](exercises/simple_pipeline)
+    - Description: Builds on top of the DMA examples to create a simple pipeline that performs a multiply-add tree on a stream of inputs from an array in the host-processor's memory, while producing an output stream that is written to a separate array in memory.
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
