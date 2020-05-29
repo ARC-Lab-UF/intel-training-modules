@@ -19,7 +19,7 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 
 # Introduction
 
-This example illustruates a simple AFU that implements a Fibonacci calculator. 
+This example illustrutes a simple AFU that implements a Fibonacci calculator. 
 Software running on the host processor sends an input *n* to the AFU, which 
 specifies the which Fibonacci number to calculate. The software then sends a *go*
 signal to the AFU, and then continuously reads a *done* signal until the AFU
