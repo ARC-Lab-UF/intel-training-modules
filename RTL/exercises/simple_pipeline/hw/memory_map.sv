@@ -17,15 +17,7 @@
 // University of Florida
 
 // Module Name:  memory_map.sv
-// Description:  This module implements a memory map for the basic loopback,
-//               with the key difference being that the memory map now uses
-//               the mmio_if interface instead of CCI-P. The behavior is
-//               nearly identical with the exception that mmio_if does not
-//               support multi-cycle reads. As a result, there is no
-//               transaction ID.
-//
-//               Addresses still must follow all rules for CCI-P, which requires
-//               even addresses for 64-bit data.
+// Description:  This module implements a memory map for the simple pipeline.
 //
 //               The memory map provides 4 inputs to the circuit:
 //               go         : h0050,
@@ -37,7 +29,7 @@
 //               done    : h0058
 //
 //               rd_addr and wr_addr are both 64-bit virtual byte addresses.
-//               input_size is the number of cache lines to transfer
+//               input_size is the number of input cache lines to transfer
 //               go starts the AFU and done signals completion.
 
 //==========================================================================
@@ -84,10 +76,10 @@ module memory_map
    // =============================================================//     
    always_ff @(posedge clk or posedge rst) begin 
       if (rst) begin
-	 go       <= '0;
-	 rd_addr  <= '0;
-	 wr_addr  <= '0;	     
-	 input_size     <= '0;
+	 go 	    <= '0;
+	 rd_addr    <= '0;
+	 wr_addr    <= '0;	     
+	 input_size <= '0;
       end
       else begin
 	 go <= '0;
@@ -117,13 +109,13 @@ module memory_map
 	    
             case (mmio.rd_addr)
 
-	      16'h0052: mmio.rd_data[$size(rd_addr)-1:0] <= rd_addr;
-	      16'h0054: mmio.rd_data[$size(wr_addr)-1:0] <= wr_addr;
-	      16'h0056: mmio.rd_data[$size(input_size)-1:0] <= input_size;     	     
-	      16'h0058: mmio.rd_data[0] <= done;
+	      16'h0052: mmio.rd_data[$size(rd_addr)-1:0]    <= rd_addr;
+	      16'h0054: mmio.rd_data[$size(wr_addr)-1:0]    <= wr_addr;
+	      16'h0056: mmio.rd_data[$size(input_size)-1:0] <= input_size;     
+	      16'h0058: mmio.rd_data[0] 		    <= done;
 	      
 	      // If the processor requests an address that is unused, return 0.
-              default:  mmio.rd_data <= 64'h0;
+              default:  mmio.rd_data 			    <= 64'h0;
             endcase
          end
       end

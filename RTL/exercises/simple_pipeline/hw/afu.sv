@@ -17,46 +17,37 @@
 // University of Florida
 
 // Module Name:  afu.sv
-// Project:      dma_loopback
-// Description:  This AFU provides a loopback DMA test that simply reads
-//               data from one array in the CPU's memory and writes the
-//               received data to a separate array. The AFU uses MMIO to
-//               receive the starting read adress, starting write address,
-//               size (# of cache lines to read/wite), and a go signal. The
-//               AFU asserts a done signal to tell software that the DMA
-//               transfer is complete.
+// Project:      simple pipeline
+// Description:  This AFU implements a simple pipeline that streams 32-bit
+//               unsigned integers from an input array, with each cache line
+//               providing 16 inputs. The pipeline multiplies the 8 pairs of
+//               inputs from each input cache line, and sums all the products
+//               to get a 64-bit result that is written to an output array.
+//               All multiplications and additions should provide 64-bit
+//               outputs, which means that the multiplications retain all
+//               precision (due to their 32-bit inputs), but the adds due not
+//               include carrys.
 //
-//               One key difference with this AFU is that it does not use
-//               CCI-P, which is abstracted away by a hardware abstraction
-//               layer (HAL). Instead, the AFU uses a simplified MMIO interface
-//               and DMA interface.
+//               Since each output is 64 bits, the AFU must generate 8 outputs
+//               before writing a cache line to memory (512 bits). The AFU
+//               uses output buffering to pack 8 separate 64-bit outputs into
+//               a single 512-bit buffer that is then written to memory.
 //
-//               The MMIO interface is defined in mmio_if.vh. It behaves
-//               similarly to the CCI-P functionality, except only supports
-//               single-cycle MMIO read responses, which eliminates the need
-//               for transaction IDs. MMIO writes behave identically to
-//               CCI-P.
+//               Although the AFU could be extended to support any number of
+//               inputs and/or outputs, software ensures that the number of
+//               inputs is a multiple of 16, so the AFU doesn't have to consider
+//               the situation of ending without 8 results in the buffer to
+//               write to memory (i.e. an incomplete cache line on the final
+//               transfer.
+
+//               The AFU uses MMIO to receive the starting read adress, 
+//               starting write address, input_size (# of input cache lines), 
+//               and a go signal. The AFU asserts a MMIO done signal to tell 
+//               software that the DMA that all results have been written to
+//               memory.
 //
-//               The DMA read interface takes a starting read address (rd_addr),
-//               and a read size (rd_size) (# of cache lines to read). The rd_go
-//               signal starts the transfer. When data is available from memory
-//               the empty signal is cleared (0 == data available) and the data
-//               is shown on the rd_data port. To read the data, the AFU should
-//               assert the read enable (rd_en) (active high) for one cycle.
-//               The rd_done signal is continuously asserted (active high) after
-//               the AFU reads "size" words from the DMA.
-//
-//               The DMA write interface is similar, again using a starting
-//               write address (wr_addr), write size (wr_size), and go signal.
-//               Before writing data, the AFU must ensure that the write
-//               interface is not full (full == 0). To write data, the AFU
-//               puts the corresponding data on wr_data and asserts wr_en
-//               (active high) for one cycle. The wr_done signal is continuosly
-//               asserted after size cache lines have been written to memory.
-//
-//               All addresses are virtual addresses provided by the software.
-//               All data elements are cachelines.
-//
+//               This example assumes the user is familiar with the
+//               dma_loopback and dma_loop_uclk training modules.
 
 //===================================================================
 // Interface Description
@@ -88,8 +79,8 @@ module afu
    // this will suffice.
    localparam int PIPELINE_LATENCY = 5;
    
-   // 512 is the shallowest a block RAM can be, so there's no point in making
-   // it smaller unless using MLABs instead.
+   // 512 is the shallowest a block RAM can be in the Arria 10, so there's no 
+   // point in making it smaller unless using MLABs instead.
    localparam int FIFO_DEPTH = 512;
             
    // I want to just use dma.count_t, but apparently
@@ -111,7 +102,7 @@ module afu
    logic [VIRTUAL_BYTE_ADDR_WIDTH-1:0] rd_addr, wr_addr;
 
    // Instantiate the memory map, which provides the starting read/write
-   // 64-bit virtual byte addresses, a transfer size (in cache lines), and a
+   // 64-bit virtual byte addresses, an input size (in cache lines), and a
    // go signal. It also sends a done signal back to software.
    memory_map
      #(
@@ -120,9 +111,8 @@ module afu
        )
      memory_map (.*);
 
+   // Slice the DMA read data (i.e. cache line) into 16 separate 32-bit inputs.
    logic [INPUT_WIDTH-1:0] pipeline_inputs[INPUTS_PER_CL];
-
-   // Slice the DMA read data into 16 separate 32-bit inputs.
    always_comb begin
       for (int i=0; i < INPUTS_PER_CL; i++) begin
 	 pipeline_inputs[i] = dma.rd_data[INPUT_WIDTH*i +: INPUT_WIDTH];
@@ -131,7 +121,13 @@ module afu
 
    logic pipeline_valid_out;
    logic [RESULT_WIDTH-1:0] pipeline_result;
-      
+
+   // Instantiate the pipeline.
+   // The pipeline is always enabled due to the use of an absorption FIFO. See
+   // comments below.
+   // The pipeline has valid inputs everytime data is read from the DMA, and
+   // has a valid output when pipeline_valid_out is asserted, with the result
+   // showing up on pipeline_result.
    pipeline pipeline (.clk,
 		      .rst,
 		      .en(1'b1),
@@ -149,8 +145,8 @@ module afu
    // also prevent usage of HyperRegisters on Stratix 10 designs.
    //
    // This absorption FIFO creates the illusion of a stall by stopping the 
-   // inputs to the FIFO during a stall and "absorbing" the existing contents 
-   // of the pipeline. See the following paper for more details:
+   // inputs to the pipeline during a stall and "absorbing" the existing 
+   // contents of the pipeline. See the following paper for more details:
    //
    // M. N. Emas, A. Baylis and G. Stitt, "High-Frequency Absorption-FIFO 
    // Pipelining for Stratix 10 HyperFlex," 2018 IEEE 26th Annual International 
@@ -160,6 +156,8 @@ module afu
      #(
        .WIDTH(RESULT_WIDTH),
        .DEPTH(FIFO_DEPTH),
+       // This leaves enough space to absorb the entire contents of the
+       // pipeline when there is a stall.
        .ALMOST_FULL_COUNT(FIFO_DEPTH-PIPELINE_LATENCY)
        )
    absorption_fifo 
@@ -169,7 +167,7 @@ module afu
       .rd_en(fifo_rd_en),
       .wr_en(pipeline_valid_out),
       .empty(fifo_empty),
-      .full(),
+      .full(), // Not used in an absorption FIFO.
       .almost_full(fifo_almost_full),
       .count(),
       .space(),
@@ -185,7 +183,9 @@ module afu
    logic [CL_DATA_WIDTH-1:0] output_buffer_r;
    
    // The output buffer is full when it contains RESULT_PER_CL results (i.e.,
-   // a full cache line) to write to memory.
+   // a full cache line) to write to memory and there isn't currently a write
+   // to the DMA (which resets result_count_r). The && !dma.wr_en isn't neeeded
+   // but can save a cycle every time there is an output written to memory.
    logic output_buffer_full;
    assign output_buffer_full = (result_count_r == RESULTS_PER_CL) && !dma.wr_en;
    
@@ -194,8 +194,7 @@ module afu
    assign fifo_rd_en = !fifo_empty && !output_buffer_full;   
    
    // Pack results into a cache line to write to memory.
-   always_ff @ (posedge clk or posedge rst) begin
-      
+   always_ff @ (posedge clk or posedge rst) begin     
       if (rst) begin
 	 result_count_r <= '0;
       end
@@ -208,7 +207,9 @@ module afu
 	 
 	 // Whenever something is read from the absorption fifo, shift the 
 	 // output buffer to the right and append the data from the FIFO to 
-	 // the front of the buffer.	 
+	 // the front of the buffer.
+	 // After 8 reads from the FIFO, output_buffer_r will contain 8 complete
+	 // results, all aligned correctly for memory.
 	 if (fifo_rd_en) begin
 	    output_buffer_r <= {fifo_rd_data, 
 				output_buffer_r[CL_DATA_WIDTH-1:RESULT_WIDTH]};
@@ -240,7 +241,7 @@ module afu
    // Read from the DMA when there is data available (!dma.empty) and when
    // there is still space in the absorption FIFO to absorb the result in the
    // case of a stall. Without an absorption FIFO, the condition would 
-   // likely be: !dma.empty && !dma.full
+   // likely be: !dma.empty && !stalled
    assign dma.rd_en = !dma.empty && !fifo_almost_full;
 
    // Write to memory when there is a full cache line to write, and when the
@@ -250,7 +251,7 @@ module afu
    // Write the data from the output buffer, which stores 8 separate results.
    assign dma.wr_data = output_buffer_r;
 
-   // The AFU is done when the DMA is done writing size cache lines.
+   // The AFU is done when the DMA is done writing all results.
    assign done = dma.wr_done;
             
 endmodule

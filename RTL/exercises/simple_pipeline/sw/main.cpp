@@ -16,15 +16,18 @@
 // Greg Stitt
 // University of Florida
 //
-// Description: This application demonstrates a DMA AFU where the FPGA transfers
-// data from an input array into an output array.
-// 
-// The example demonstrates an extension of the AFU wrapper class that uses
-// AFU::malloc() to dynamically allocate virtually contiguous memory that can
-// be accessed by both software and the AFU.
-
-// INSTRUCTIONS: Change the configuration settings in config.h to test 
-// different types of data.
+// Description: This application demonstrates a simple AFU pipeline that 
+// streams 32-bit unsigned integers from an input array into the AFU. The AFU 
+// multiplies 8 pairs of inputs (from a single cache line), accumulates the 
+// results, and writes a 64-bit result to an output array. Because a full 
+// cache line must be written to memory with the provided DMA, the application 
+// takes as input the number of output cache lines, and then determines the 
+// appropriate number of outputs and inputs to fill those cache lines. 
+//
+// This software allocates the input and output arrays, initializes their 
+// contents, transfers the virtual addresses of the arrays, the 
+// number of input cache lines to read, and a go signal to start the AFU. The
+// software then waits until the AFU signals that it is done.
 
 #include <cstdlib>
 #include <iostream>
@@ -63,9 +66,6 @@ int main(int argc, char *argv[]) {
   num_inputs = num_outputs * 16;
 
   try {
-    // Create an AFU object to provide basic services for the FPGA. The 
-    // constructor searchers available FPGAs for one with an AFU with the
-    // the specified ID
     AFU afu(AFU_ACCEL_UUID); 
     bool failed = false;
 
@@ -82,19 +82,19 @@ int main(int argc, char *argv[]) {
       output[i] = 0;
     }   
     
-    // Inform the FPGA of the starting read and write address of the arrays.
+    // Inform the FPGA of the starting addresses of the arrays.
     afu.write(MMIO_RD_ADDR, (uint64_t) input);
     afu.write(MMIO_WR_ADDR, (uint64_t) output);
 
     // The FPGA DMA only handles cache-line transfers, so we need to convert
-    // the array size to cache lines. We could also do this conversion on the 
-    // FPGA and transfer the number of inputs instead here.
+    // the input array size to cache lines. We could also do this conversion 
+    // on the FPGA and transfer the number of inputs instead here.
     // The number of output cache lines is calculated by the FPGA.
     unsigned total_bytes = num_inputs*sizeof(uint32_t);
     unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
     afu.write(MMIO_SIZE, num_cls);
 
-    // Start the FPGA DMA transfer.
+    // Start the FPGA DMA transfer (cleared automatically by the AFU).
     afu.write(MMIO_GO, 1);  
 
     // Wait until the FPGA is done.
@@ -104,6 +104,7 @@ int main(int argc, char *argv[]) {
 #endif
     }
 
+    // Verify the output.
     unsigned errors = 0;
     for (unsigned i=0; i < num_outputs; i++) {     
       if (output[i] != getCorrectOutput(input, i)) {
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-       // Free the allocated memory.
+    // Free the allocated memory.
     afu.free(input);
     afu.free(output);
         
@@ -192,9 +193,12 @@ bool checkUsage(int argc, char *argv[], unsigned long &num_output_cls) {
 
 uint64_t getCorrectOutput(volatile uint32_t input[], unsigned output_id) {
 
+  // There are 16 inputs for every output, so find the appropriate range
+  // of the input array to calculate the requested output.
   unsigned start_index = output_id*16;
   unsigned end_index = start_index + 16;
 
+  // Perform the same computation as the AFU pipeline.
   uint64_t result = 0;
   for (unsigned i=start_index; i < end_index; i+=2) {
     result += (uint64_t) input[i] * (uint64_t) input[i+1];
