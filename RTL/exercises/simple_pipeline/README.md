@@ -17,6 +17,8 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 
 # Introduction
 
+In this example, you will be creating a simple pipeline in an AFU. 
+
 This example demonstrates how to read from and write to the host-processor's memory from the AFU. Due to the difficulties of
 using CCI-P directly for accessing RAM, the example introduces a hardware-abstraction layer (HAL) that provides a simple
 DMA interface. The AFU uses that DMA interface to provide simple loopback functionality that reads an input array from memory
