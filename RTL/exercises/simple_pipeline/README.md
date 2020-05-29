@@ -35,7 +35,7 @@ add wave -expand /ase_top/platform_shim_ccip_std_afu/ccip_std_afu/hal/afu/pipeli
 
 This will add the array of multiplier-output registers to the waveform when the simulation is run. Repeat for other signals that you would like to monitor. For some reason, using the * will not add these signals, so to my knowledge that have to be specified individually with the complete path in the design hierarchy. Since it is easy to mistype this path, I usually open modelsim, find another signal within the module that I want, copy that design hierarchy path, and then just replace the signal name with the one I want to add.
 
-To use this solution, create the simulation using the normal afu_sim_setup script, and then copy solution/hw/vsim_run.tcl into the created directory.
+To use this solution, create the simulation using the normal afu_sim_setup script, and then copy [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) into the created directory.
 
 A similar issue commonly occurs for block RAM resources, which can be added in the same way, or can be automatically added as described in the [mmio_mc_read](../../examples/mmio_mc_read) example.
 
