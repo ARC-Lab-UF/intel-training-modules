@@ -1,0 +1,11 @@
+afu.json
+
+C:${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/hw/rtl/cci_mpf_sources.txt
+
++incdir+.
+memory_map.sv
+cci_dma.sv
+afu.sv
+csr_mgr.sv
+hal.sv
+ccip_std_afu.sv

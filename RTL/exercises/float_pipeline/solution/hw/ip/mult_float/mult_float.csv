@@ -1,0 +1,20 @@
+# system info mult_float on 2020.05.29.14:42:48
+system_info:
+name,value
+DEVICE,10AX115U3F45E2SG
+DEVICE_FAMILY,Arria 10
+GENERATION_ID,0
+#
+#
+# Files generated for mult_float on 2020.05.29.14:42:48
+files:
+filepath,kind,attributes,module,is_top
+sim/mult_float.v,VERILOG,CONTAINS_INLINE_CONFIGURATION,mult_float,true
+altera_fp_functions_171/sim/dspba_library_package.vhd,VHDL,,mult_float_altera_fp_functions_171_z2kbsra,false
+altera_fp_functions_171/sim/dspba_library.vhd,VHDL,,mult_float_altera_fp_functions_171_z2kbsra,false
+altera_fp_functions_171/sim/mult_float_altera_fp_functions_171_z2kbsra.vhd,VHDL,,mult_float_altera_fp_functions_171_z2kbsra,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+mult_float.fp_functions_0,mult_float_altera_fp_functions_171_z2kbsra
