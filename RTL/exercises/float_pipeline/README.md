@@ -19,23 +19,22 @@ gpl.txt file, or go to http://www.gnu.org/licenses/.
 
 It is highly recommended that the reader attempt this exercise after studying the [previous examples and exercises shown here](../../../RTL#suggested-study-order).
 
-In this example, you will be creating a simple pipeline in an AFU. The pipeline streams an array of 32-bit unsigned integers from an input array in the host-processors memory. The pipeline takes 16 of those integers as inputs, multipliers the 8 pairs of inputs (to provide 8 64-bit products), and then sums the 8 products into a 64-bit result (the adds ignore carries). The output of the pipeline is written to a separate output array in memory. However, because the DMA interface only allows writing entire cache lines (512 bits), the AFU must first pack 8 separate outputs (512 bits) to avoid gaps between results in memory. 
+In this example, you will be created a modified version of the [simple_pipeline](../simple_pipeline) example. In this example, all operations are 32-bit floats. The structure of the pipeline should be identical, expect now all multiplications and adds use floating-point resources. To perform floating-point, you generally use cores from the Intel IP Library within Quartus. The hw/ip folders already provide an IP core for both a floating-point multiply and floating-point add. Each core has a latency of 3 cycles. Note that these cores may need to be regenereated depending on the version of Quartus you are using.
 
-To ensure that the AFU doesn't have to deal with partial cache lines on the last transfer, the software assures that the number of inputs and outputs are a multiple of the required amount to always provide complete cache line outputs. Although the provided solution provides this funtionality, the AFU can be extended to support any number of outputs, which is left to the reader as an exercise.
+Like the [simple_pipeline](../simple_pipeline) example, the AFU needs to pack multiple outputs into a single cache line. However, for this example, the results are 32-bit floats instead of 64-bit integers, so there will be twice as many outputs per cache line. Make sure to adapt the previous code for this new number of outputs.
 
-The provided software instantiates the AFU, allocates inputs and output arrays within memory, initializes those arrays, and transfers configuration information to the AFU over MMIO. Software provides the virtual byte address of the input and output memory, and also specifies the size of the input stream to read from memory in terms of number of cachelines. The software also sends a go signal over MMIO, waits until the AFU is complete by reading from a done signal over MMIO, and then verifies the contents of the output array are correct.
+The provided software is identical, except with all inputs and outputs using 32-bit floats. One issue with floating point is that you can't directly compare equality between software and the AFU because of the non-associativity of floating-point operations. Because the AFU performs the operations in a different order than software, the outputs are *slightly* different. Within sw/config.h, there is a threshold defined for an acceptable error percentage. The software uses this amount to determine correctness. 
 
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 
-**Example-Specific Simulation Instructions:** When using Intel ASE, it is common for Modelsim to exclude various signals from the waveform, especially arrays. Without those signals, debugging is nearly impossible. This issue is demonstrated within the provided solution for this example, where none of the internal signals within ADDLATER are included in the waveform. Fortunately, the signals can be added manually before the simulation starts. Look at [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) for an example of this. In that file, there are lines like the following:
+**Example-Specific Simulation Instructions:** When simulating cores from the IP library, you must first make sure that simulation libraries have been compiled. Depending on your specific version of afu_sim_setup, the script might not do this for you. To make simulation as transparent as possible, this example includes a fix_sim.sh script that corrects the generated ASE project so that it works with the IP cores. To use the script, simply run it on the simulation directory created by afu_sim_setup:
 
 ```
-add wave -expand /ase_top/platform_shim_ccip_std_afu/ccip_std_afu/hal/afu/pipeline/mult_out_r
+afu_sim_setup -s hw/filelist.txt sim
+./fix_sim.sh sim
 ```
 
-This will add the array of multiplier-output registers to the waveform when the simulation is run. Repeat for other signals that you would like to monitor. For some reason, using the * will not add these signals, so to my knowledge that have to be specified individually with the complete path in the design hierarchy. Since it is easy to mistype this path, I usually open modelsim, find another signal within the module that I want, copy that design hierarchy path, and then just replace the signal name with the one I want to add.
-
-To use this solution, create the simulation using the normal afu_sim_setup script, and then copy [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) into the created directory.
+This script will also copy a vsim_run.tcl file that you can modify to display whatever signals you would like to see in the waveform. Make changes in the custom_sim/vsim_run.tcl file before runing fix_sim.sh. See the [simple_pipeline](../simple_pipeline) for more details about signals missing from the simulation waveform.
 
 A similar issue commonly occurs for block RAM resources, which can be added in the same way, or can be automatically added as described in the [mmio_mc_read](../../examples/mmio_mc_read) example.
 
