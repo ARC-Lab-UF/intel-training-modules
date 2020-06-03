@@ -18,15 +18,18 @@
 
 // Module Name:  pipeline.sv
 // Project:      simple pipeline
-// Description:  This pipelines takes 16 32-bit unsigned inputs, multiplies 
-//               each pair of inputs to generate 8 64-bit products, and then
-//               adds those products to generate a 64-bit result (the adds 
-//               ignore carries).
+// Description:  This pipelines takes 16 32-bit floats, multiplies 
+//               each pair of inputs to generate 8 32-bit float products, and 
+//               then adds those products to generate a 32-bit float result.
+//               All operations use 32-bit floats.
 //
 //               The pipeline has valid inputs when valid_in is asserted, and
 //               asserts valid_out when the result is valid. The pipeline stalls
 //               when en = 0, but recommended usage is to hardcode en to 1 when
 //               instantiating the pipeline (see afu.sv).
+//
+//               The latency of the floating point operations and the total
+//               pipeline is specified in pipe_pkg.sv.
 
 
 import pipe_pkg::*;
@@ -37,8 +40,8 @@ import pipe_pkg::*;
 // rst  : Reset input (active high)
 // en   : Activates pipeline when asserted (active high), stalls when 0
 // valid_id : Specifies validity of data on inputs.
-// inputs : An array of 16 unsigned 32-bit inputs.
-// result : The 64-bit result.
+// inputs : An array of 16 32-bit float inputs.
+// result : The 32-bit float result.
 // valid_out : Asserted when result contains valid data (active high)
 //===================================================================
 
@@ -53,23 +56,18 @@ module pipeline
     output logic 	valid_out
     );
 
-   // Would normally be calculated based off the number of inputs, but since
-   // the inputs are fixed, the latency is just hardcoded.   
-   // The +1 is for the registered inputs.
-   //localparam int 	LATENCY = MULT_LATENCY + ADD_LATENCY*3 + 1;
-   //localparam int 	LATENCY = pipe_pkg::PIPE_LATENCY;
-      
    // Signals for each row of the multiply-add tree.
    logic [31:0] 		   inputs_r[16];
    logic [31:0] 		   mult_out[8];
    logic [31:0] 		   add_out_l1[4];
    logic [31:0] 		   add_out_l2[2];
 
-   // Delays valid_in by LATENCY cycles.
+   // Delays valid_in by pipe_pkg::PIPE_LATENCY cycles.
    logic 			   delay_r[pipe_pkg::PIPE_LATENCY];
-   //logic 			   delay_r[LATENCY];  
 
    genvar 			   i;
+
+   // Generate the 8 multipliers.
    generate
       for (i=0; i < 8; i++) begin : gen_mults
 	 mult_float mult (
@@ -83,6 +81,7 @@ module pipeline
       end
    endgenerate
 
+   // Generate the first level of adders to add the 4 multiplier outputs.
    generate
       for (i=0; i < 4; i++) begin : gen_add_l1
 	 add_float add_l1 (
@@ -96,6 +95,7 @@ module pipeline
       end
    endgenerate
 
+   // Generate the second level of adders to add the 2 level 1 adder outputs.
    generate
       for (i=0; i < 2; i++) begin : gen_add_l2
 	 add_float add_l2 (
@@ -109,6 +109,7 @@ module pipeline
       end
    endgenerate
 
+   // Instantiate the final adder to generate the result.
    add_float add_l3 (
 		     .a(add_out_l2[0]),
 		     .areset(rst),

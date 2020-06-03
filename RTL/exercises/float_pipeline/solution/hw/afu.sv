@@ -19,24 +19,21 @@
 // Module Name:  afu.sv
 // Project:      simple pipeline
 // Description:  This AFU implements a simple pipeline that streams 32-bit
-//               unsigned integers from an input array, with each cache line
+//               floats from an input array, with each cache line
 //               providing 16 inputs. The pipeline multiplies the 8 pairs of
 //               inputs from each input cache line, and sums all the products
-//               to get a 64-bit result that is written to an output array.
-//               All multiplications and additions should provide 64-bit
-//               outputs, which means that the multiplications retain all
-//               precision (due to their 32-bit inputs), but the adds due not
-//               include carrys.
+//               to get a 32-bit float result that is written to an output 
+//               array. All multiplications and additions use 32-bit floats.
 //
-//               Since each output is 64 bits, the AFU must generate 8 outputs
+//               Since each output is 32 bits, the AFU must generate 16 outputs
 //               before writing a cache line to memory (512 bits). The AFU
-//               uses output buffering to pack 8 separate 64-bit outputs into
+//               uses output buffering to pack 16 separate 32-bit outputs into
 //               a single 512-bit buffer that is then written to memory.
 //
 //               Although the AFU could be extended to support any number of
 //               inputs and/or outputs, software ensures that the number of
 //               inputs is a multiple of 16, so the AFU doesn't have to consider
-//               the situation of ending without 8 results in the buffer to
+//               the situation of ending without 16 results in the buffer to
 //               write to memory (i.e. an incomplete cache line on the final
 //               transfer.
 
@@ -205,8 +202,9 @@ module afu
 	 // Whenever something is read from the absorption fifo, shift the 
 	 // output buffer to the right and append the data from the FIFO to 
 	 // the front of the buffer.
-	 // After 8 reads from the FIFO, output_buffer_r will contain 8 complete
-	 // results, all aligned correctly for memory.
+	 // After RESULTS_PER_CL reads from the FIFO, output_buffer_r will 
+	 // contain RESULTS_PER_CL complete results, all aligned correctly for
+	 //  memory.
 	 if (fifo_rd_en) begin
 	    output_buffer_r <= {fifo_rd_data, 
 				output_buffer_r[CL_DATA_WIDTH-1:RESULT_WIDTH]};
