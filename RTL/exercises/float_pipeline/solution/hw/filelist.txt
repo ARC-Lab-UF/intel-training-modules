@@ -13,6 +13,7 @@ ip/add_float/sim/add_float.v
 ip/add_float/altera_fp_functions_171/sim/add_float_altera_fp_functions_171_rgz4tay.vhd
 
 +incdir+.
+pipe_pkg.sv
 memory_map.sv
 fifo.sv
 pipeline.sv

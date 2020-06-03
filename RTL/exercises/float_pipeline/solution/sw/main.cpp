@@ -17,9 +17,9 @@
 // University of Florida
 //
 // Description: This application demonstrates a simple AFU pipeline that 
-// streams 32-bit unsigned integers from an input array into the AFU. The AFU 
+// streams 32-bit floats from an input array into the AFU. The AFU 
 // multiplies 8 pairs of inputs (from a single cache line), accumulates the 
-// results, and writes a 64-bit result to an output array. Because a full 
+// results, and writes a 32-bit float result to an output array. Because a full 
 // cache line must be written to memory with the provided DMA, the application 
 // takes as input the number of output cache lines, and then determines the 
 // appropriate number of outputs and inputs to fill those cache lines. 
@@ -47,7 +47,7 @@ using namespace std;
 
 void printUsage(char *name);
 bool checkUsage(int argc, char *argv[], unsigned long &num_inputs);
-bool isAcceptableError(float x, float y);
+bool isAcceptableError(float fpga, float sw);
 float getCorrectOutput(volatile float input[], unsigned output_id);
 
 
@@ -119,9 +119,6 @@ int main(int argc, char *argv[]) {
 
       if (!isAcceptableError(output[i], sw_result)) {
 	
-	cout << "ERROR: " << output[i] << " " << sw_result << endl;	
-	cout << abs((output[i]-sw_result)/sw_result) << endl;
-
 	errors ++;
       }
     }
