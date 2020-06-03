@@ -46,7 +46,9 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
   OPAE SDK scripts must be on PATH and include files and libraries must be available
   to the C compiler.  In addition, ensure that the OPAE_PLATFORM_ROOT
   environment variable is set. Some examples will also require the installation
-  of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb. 
+  of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb.
+  The provided [setup.sh](setup.sh) script will download and install the BBB for use
+  on the DevCloud.
 
   Simulation requires two software processes: one for RTL simulation and
   the other to run the connected software.  To construct an RTL simulation
@@ -113,4 +115,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     $ ./afu
   
   Make sure to not run the simulation verision ./afu_ase.
+  
+  Some examples will also require the installation of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb.
+  The provided [setup.sh](setup.sh) script will download and install the BBB for use on the DevCloud.
 
