@@ -23,6 +23,16 @@
 //               then adds those products to generate a 32-bit float result.
 //               All operations use 32-bit floats.
 //
+//               The pipeline implements the functionality as a complete
+//               multiply-add tree in order to imitate the simple_pipeline
+//               example. Although this works, it does not provide the most
+//               effective usage of DSP resources. A DSP can be configured
+//               to perform a multiply and and add, which would save DSPs here.
+//               However, when doing a multiply and add, the DSP has some
+//               restrictions on circuit structure, which requires additional
+//               delays. It is left as an exercise to the reader to implement
+//               the same design with DSPs performing a multiply and add.
+//
 //               The pipeline has valid inputs when valid_in is asserted, and
 //               asserts valid_out when the result is valid. The pipeline stalls
 //               when en = 0, but recommended usage is to hardcode en to 1 when
