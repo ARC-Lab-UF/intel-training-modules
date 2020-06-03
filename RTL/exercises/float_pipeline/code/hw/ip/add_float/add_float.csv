@@ -1,0 +1,20 @@
+# system info add_float on 2020.05.29.14:41:19
+system_info:
+name,value
+DEVICE,10AX115U3F45E2SG
+DEVICE_FAMILY,Arria 10
+GENERATION_ID,0
+#
+#
+# Files generated for add_float on 2020.05.29.14:41:19
+files:
+filepath,kind,attributes,module,is_top
+sim/add_float.v,VERILOG,CONTAINS_INLINE_CONFIGURATION,add_float,true
+altera_fp_functions_171/sim/dspba_library_package.vhd,VHDL,,add_float_altera_fp_functions_171_rgz4tay,false
+altera_fp_functions_171/sim/dspba_library.vhd,VHDL,,add_float_altera_fp_functions_171_rgz4tay,false
+altera_fp_functions_171/sim/add_float_altera_fp_functions_171_rgz4tay.vhd,VHDL,,add_float_altera_fp_functions_171_rgz4tay,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+add_float.fp_functions_0,add_float_altera_fp_functions_171_rgz4tay

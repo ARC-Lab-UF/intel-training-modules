@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file
+   path="altera_fp_functions_171/sim/dspba_library_package.vhd"
+   type="VHDL"
+   library="altera_fp_functions_171" />
+ <file
+   path="altera_fp_functions_171/sim/dspba_library.vhd"
+   type="VHDL"
+   library="altera_fp_functions_171" />
+ <file
+   path="altera_fp_functions_171/sim/add_float_altera_fp_functions_171_rgz4tay.vhd"
+   type="VHDL"
+   library="altera_fp_functions_171" />
+ <file
+   path="sim/add_float.v"
+   type="VERILOG"
+   library="add_float"
+   hasInlineConfiguration="true" />
+ <topLevel name="add_float.add_float" />
+ <deviceFamily name="arria10" />
+</simPackage>

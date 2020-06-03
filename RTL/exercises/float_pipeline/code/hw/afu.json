@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "afu-image": {
+	"power": 0,
+	"clock-frequency-high": "auto-300.0",
+	"clock-frequency-low": "auto-150.0",
+	"afu-top-interface":
+        {
+            "class": "ccip_std_afu",
+	    "module-ports" :
+            [ 
+                {
+                    "class": "cci-p",
+                    "params":
+                    {
+                        "clock": "uClk_usr"
+                    }
+                }
+            ]
+        },
+	"accelerator-clusters":
+        [
+            {
+		"name": "afu",
+		"total-contexts": 1,
+		"accelerator-type-uuid": "ac6f7138-100e-4b4e-a106-17a5c3eb4d7d"
+            }
+        ]
+    }
+}
