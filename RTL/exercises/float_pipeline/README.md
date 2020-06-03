@@ -34,7 +34,7 @@ afu_sim_setup -s hw/filelist.txt sim
 ./fix_sim.sh sim
 ```
 
-This script will also copy a vsim_run.tcl file that you can modify to display whatever signals you would like to see in the waveform. Make changes in the custom_sim/vsim_run.tcl file before runing fix_sim.sh. See the [simple_pipeline](../simple_pipeline) for more details about signals missing from the simulation waveform.
+This script will also copy a vsim_run.tcl file that you can modify to display whatever signals you would like to see in the waveform. Make changes in the custom_sim/vsim_run.tcl file before runing fix_sim.sh. See the [simple_pipeline](../simple_pipeline) example for more details about signals missing from the simulation waveform.
 
 A similar issue commonly occurs for block RAM resources, which can be added in the same way, or can be automatically added as described in the [mmio_mc_read](../../examples/mmio_mc_read) example.
 
