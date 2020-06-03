@@ -29,7 +29,7 @@ To complete the exercise, the user must specify the AFU within code/hw/afu.sv. S
 
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 
-**Example-Specific Simulation Instructions:** When using Intel ASE, it is common for Modelsim to exclude various signals from the waveform, especially arrays. Without those signals, debugging is nearly impossible. This issue is demonstrated within the provided solution for this example, where none of the internal signals within ADDLATER are included in the waveform. Fortunately, the signals can be added manually before the simulation starts. Look at [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) for an example of this. In that file, there are lines like the following:
+**Example-Specific Simulation Instructions:** When using Intel ASE, it is common for Modelsim to exclude various signals from the waveform, especially arrays. Without those signals, debugging is nearly impossible. This issue is demonstrated within the provided solution for this example, where none of the internal signals within [solution/hw/pipeline.sv](solution/hw/pipeline.sv) are included in the waveform. Fortunately, the signals can be added manually before the simulation starts. Look at [solution/hw/vsim_run.tcl](solution/hw/vsim_run.tcl) for an example of this. In that file, there are lines like the following:
 
 ```
 add wave -expand /ase_top/platform_shim_ccip_std_afu/ccip_std_afu/hal/afu/pipeline/mult_out_r

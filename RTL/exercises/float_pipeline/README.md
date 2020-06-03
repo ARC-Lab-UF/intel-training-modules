@@ -27,12 +27,14 @@ The provided software is identical, except with all inputs and outputs using 32-
 
 # [Simulation Instructions](https://github.com/ARC-Lab-UF/intel-training-modules/blob/master/RTL/#simulation-instructions)
 
-**Example-Specific Simulation Instructions:** When simulating cores from the IP library, you must first make sure that simulation libraries have been compiled. Depending on your specific version of afu_sim_setup, the script might not do this for you. To make simulation as transparent as possible, this example includes a fix_sim.sh script that corrects the generated ASE project so that it works with the IP cores. To use the script, simply run it on the simulation directory created by afu_sim_setup:
+**Example-Specific Simulation Instructions:** When simulating cores from the IP library, you must first make sure that simulation libraries have been compiled. Depending on your specific version of afu_sim_setup, and the IP cores you are using, the script might not do this for you. To make simulation as transparent as possible, this example includes a [fix_sim.sh](solution/fix_sim.sh) script that corrects the generated ASE project so that it works with the IP cores. To use the script, simply run it on the simulation directory created by afu_sim_setup:
 
 ```
 afu_sim_setup -s hw/filelist.txt sim
 ./fix_sim.sh sim
 ```
+
+For some IP cores, the fix_sim.sh might need to be modified. For example, some cores have a hex file that needs to be copied into the simulations work/ directory. It is possible that future versions of afu_sim_setup will do this, but such functionality was not available at the time of these tests.
 
 This script will also copy a vsim_run.tcl file that you can modify to display whatever signals you would like to see in the waveform. Make changes in the custom_sim/vsim_run.tcl file before runing fix_sim.sh. See the [simple_pipeline](../simple_pipeline) example for more details about signals missing from the simulation waveform.
 

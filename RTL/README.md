@@ -2,6 +2,7 @@
 
 These examples illustrate how to design AFUs for the Intel PAC using RTL code. The [examples](examples/) folder includes simple examples that explain the basic concepts of AFU design. The [exercises](exercises/) folder contains practice examples that provide skeleton code to get started, along with completed solutions.
 
+***IMPORTANT*** When running on the Intel DevCloud, make use to run [setup.sh](setup.sh) after cloning this repository to ensure that all examples have the required libraries and headers.
 
 # Suggested Study Order
 
@@ -23,6 +24,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - [Video: Explanation of multi-cycle MMIO reads](https://youtu.be/Xj1Clq4ac8E), [Slides](examples/mmio_mc_read/mmio_mc_read.pptx)
 1. [Example: dma_loopback](examples/dma_loopback)
     - Description: Illustrates how to read/write the host processor's memory from within the AFU using a hardware abstraction layer (HAL) that hides the complexities of CCI-P.
+    - Note: make use to run [setup.sh](setup.sh) before running this or any of the following examples on the DevCloud.
     - [Video: DMA Hardware Abstraction Layer](https://youtu.be/q94xiWhug6c)
 1. [Example: dma_loopback_uclk](examples/dma_loopback_uclk)
     - Description: An extension of the dma_loopback example that runs the AFU on the programmable user clock (uclk) instead of the primary clock.
@@ -44,7 +46,9 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
   OPAE SDK scripts must be on PATH and include files and libraries must be available
   to the C compiler.  In addition, ensure that the OPAE_PLATFORM_ROOT
   environment variable is set. Some examples will also require the installation
-  of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb. 
+  of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb.
+  The provided [setup.sh](setup.sh) script will download and install the BBB for use
+  on the DevCloud.
 
   Simulation requires two software processes: one for RTL simulation and
   the other to run the connected software.  To construct an RTL simulation
@@ -111,4 +115,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     $ ./afu
   
   Make sure to not run the simulation verision ./afu_ase.
+  
+  Some examples will also require the installation of the Intel FPGA Basic Building Blocks (BBB): https://github.com/OPAE/intel-fpga-bbb.
+  The provided [setup.sh](setup.sh) script will download and install the BBB for use on the DevCloud.
 
