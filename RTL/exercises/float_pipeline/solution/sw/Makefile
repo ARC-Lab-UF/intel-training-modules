@@ -1,6 +1,6 @@
 include common_include.mk
 
-# Primary test name
+# Executable name
 TEST = afu
 
 BBB_DIR = ${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/sw/include/
