@@ -22,7 +22,7 @@ the programmable user clock instead of the primary clock. The code also measures
 requested clock is actually used on the PAC.
 
 The clock frequency can be changed to any frequency by modifying this line in [hw/afu.son](hw/afu.json):
-
+ 
 ```
 "clock-frequency-high": "auto-300.0",
 ```
