@@ -29,7 +29,7 @@ that the output array is the same as the input array after FPGA execution.
 In addition to demonstrating DMA functionality, this example shows how to modify the default synthesis options created by the afu_synth_setup script. Within the hw/ folder, there is an [hw/afu.qsf](hw/afu.qsf) file that contains a synthesis option to enable pass-through logic on inferred RAMs on the fifo module. Although whenever possible, pass-through logic should be avoided, it is required by a provided FIFO in this example. Without this option, the code does not work on the PAC because the generated Quartus setting disable the required pass-through logic.
 
 To enable the afu_synth_setup script to add this qsf file to the generated quartus project, the sources file [hw/filelist.txt](hw/filelist.txt) contains the following line:
-
+ 
 ```
 QI:afu.qsf
 ```
