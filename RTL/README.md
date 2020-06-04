@@ -3,7 +3,7 @@
 These examples illustrate how to design AFUs for the Intel PAC using RTL code. The [examples](examples/) folder includes simple examples that explain the basic concepts of AFU design. The [exercises](exercises/) folder contains practice examples that provide skeleton code to get started, along with completed solutions.
 
 ***IMPORTANT*** When running on the Intel DevCloud, make use to run [setup.sh](setup.sh) after cloning this repository to ensure that all examples have the required libraries and headers.
-
+ 
 # Suggested Study Order
 
 1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
