@@ -3,12 +3,12 @@ include common_include.mk
 # Primary test name
 TEST = afu
 
-#BBB_DIR = ../../../base/intel-fpga-bbb/BBB_cci_mpf/sw/include/
+BBB_DIR = ${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/sw/include/
 
 # Build directory
 OBJDIR = obj
 CFLAGS += -I./$(OBJDIR)
-CPPFLAGS += -I./$(OBJDIR) #-I$(BBB_DIR)
+CPPFLAGS += -I./$(OBJDIR) -I$(BBB_DIR)
 
 LDFLAGS += -lopae-cxx-core -lMPF-cxx -lMPF
 
