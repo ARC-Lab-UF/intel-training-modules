@@ -30,7 +30,7 @@ These examples illustrate how to design AFUs for the Intel PAC using RTL code. T
     - Description: An extension of the dma_loopback example that runs the AFU on the programmable user clock (uclk) instead of the primary clock.
 1. [Exercise: simple_pipeline](exercises/simple_pipeline)
     - Description: Builds on top of the DMA examples to create a simple pipeline that performs a multiply-add tree on a stream of inputs from an array in the host-processor's memory, while producing an output stream that is written to a separate array in memory.
-1. [Exercise: float_pipeline](exercises/simple_pipeline)
+1. [Exercise: float_pipeline](exercises/float_pipeline)
     - Description: Same as the simple_pipeline example, but with floating-point resources. Uses cores from the Intel IP Library, along with a modified simulation script. 
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
