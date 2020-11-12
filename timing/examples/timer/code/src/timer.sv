@@ -1,10 +1,13 @@
 // Module Name:  timer.sv
-// Description:  This module provides a timer that counts a specified number
-// of cycles, asserts an output, and then repeats indefinitely.
+// Description:  This module provides a timer that counts "cycles" cycles after
+// receiving a "go" input, and asserts a "done" signal upon completion. The
+// done signal remains asserted indefinitely until go is asserted again.
+//
+// NOTE: Cycles must be positive.
 
 // TODO: Compile the design, run the timing analyzer, and identify the timing
-// bottleneck in the comparison. Then, simplify the comparator by counting
-// from cycles down to 0, instead of from 0 to cycles.
+// bottlenecks. Then, pipeline the corresponding bottleneck to meet the 
+// specified timing constraint.
 
 //===================================================================
 // Parameter Description
@@ -15,43 +18,78 @@
 // Interface Description
 // clk  : Clock input
 // rst  : Reset input (active high)
-// load : Asserted to load a cycles value (active high)
-// cycles : The number of cycles to count before asserting the output
-// elasped : Asserted for 1-cycle after "cycles" cycles have elapsed
+// go   : Assert to start the timer (active high)
+// cycles : The number of cycles to count, must be > 0.
+// done   : Asserted after "cycles" cycles have elapsed. Remains asserted
+//          until go is asserted again.
 //===================================================================
 
-module timer #(parameter int WIDTH=16)		   		  
+module timer #(parameter int WIDTH=32)		   		  
   (
-   input logic 	     clk,
-   input logic 	     rst,
-   input logic       load,
-   input [WIDTH-1:0] cycles,
-   output logic      elapsed
+   input logic 		    clk,
+   input logic 		    rst,
+   input logic 		    go, 
+   input [WIDTH-1:0] 	    cycles,
+   output logic             done
    );
 
-   logic [WIDTH-1:0] count_r, cycles_r;
-   
+   enum 		    {IDLE, WORKING} state_r, next_state; 
+   logic [WIDTH-1:0] 	    count_r, next_count;
+   logic [WIDTH-1:0] 	    cycles_r, next_cycles;
+
    always_ff @(posedge clk or posedge rst) begin
 
-      if (rst) begin	 	 
+      if (rst) begin
+	 state_r  <= IDLE;
 	 count_r  <= '0;
 	 cycles_r <= '0;
 	 	 	 	 
       end else begin
-	 
-	 elapsed <= 1'b0;
-	 count_r <= count_r + 1'b1;
-	
-	 if (load == 1'b1) begin
-	    cycles_r <= cycles;
-	    count_r  <= '0;	    
-	 end
 
-	 if (count_r == cycles_r) begin
-	    count_r <= '0;
-	    elapsed <= 1'b1;	    
-	 end
-      end
+	 // Create all the registers.
+	 state_r  <= next_state;
+	 count_r  <= next_count;	 
+	 cycles_r <= next_cycles; 	 
+      end 
    end
 
+   always_comb begin
+
+      // By default, simply set the next values to the current values.
+      next_state  = state_r;
+      next_count  = count_r;
+      next_cycles = cycles_r;
+      
+      unique case (state_r)
+
+	// Wait until go is asserted
+	IDLE : begin
+	  done = 1'b1;
+	
+	  if (go == 1'b1) begin
+	     next_state  = WORKING;
+
+	     // Start counting from 1 to cycles.
+	     next_count  = 1;
+
+	     // Save the cycles into an internal register.
+	     next_cycles = cycles;	     
+	  end
+	end
+
+	// Count up until reaching cycles_r.
+	WORKING : begin
+	   done = 1'b0;
+	   
+	   if (count_r == cycles_r) begin
+	      done       = 1'b1;	     
+	      next_state = IDLE;
+	   end else begin
+	      next_count = count_r + 1'd1;	     
+	   end
+	end	
+	
+      endcase
+   end
+  
 endmodule
