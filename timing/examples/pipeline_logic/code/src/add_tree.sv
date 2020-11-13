@@ -8,7 +8,7 @@
 
 //===================================================================
 // Parameter Description
-// WIDTH : The data wdith (number of bits) of the inputs and output
+// WIDTH : The data width (number of bits) of the inputs and output
 //===================================================================
 
 //===================================================================
