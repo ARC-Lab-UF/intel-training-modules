@@ -38,9 +38,9 @@
 
 module add_tree #(parameter int WIDTH=16)		   		  
   (
-   input logic 		    clk,
-   input logic 		    rst,
-   input [WIDTH-1:0] 	    inputs[8],
+   input 		    clk, 
+   input 		    rst,
+   input        [WIDTH-1:0] inputs[8],
    output logic [WIDTH-1:0] result
    );
 
