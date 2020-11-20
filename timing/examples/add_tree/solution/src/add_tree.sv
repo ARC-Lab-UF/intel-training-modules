@@ -33,7 +33,7 @@
 // clk  : Clock input
 // rst  : Reset input (active high)
 // inputs : An array of 8 WIDTH-bit inputs to add
-// result : A single WIDTH-bit output that represents the sum of inputs
+// sum : A single WIDTH-bit output that represents the sum of inputs
 //===================================================================
 
 module add_tree #(parameter int WIDTH=16)		   		  
@@ -41,7 +41,7 @@ module add_tree #(parameter int WIDTH=16)
    input 		    clk, 
    input 		    rst,
    input        [WIDTH-1:0] inputs[8],
-   output logic [WIDTH-1:0] result
+   output logic [WIDTH-1:0] sum
    );
 
    logic [WIDTH-1:0] 	    inputs_r[$size(inputs)];
@@ -57,7 +57,7 @@ module add_tree #(parameter int WIDTH=16)
 	 end
 
 	 // Reset the output register
-	 result <= 0;
+	 sum <= 0;
 	 
       end else begin
 
@@ -77,7 +77,7 @@ module add_tree #(parameter int WIDTH=16)
 	 // Final adder (blocking assignment of add2_0 prevents an extra 
 	 // register on the output)
 	 add2_0 = add1_0 + add1_1;
-	 result <= add2_0;	 
+	 sum   <= add2_0;	 
       end 
    end // always_ff @
 
