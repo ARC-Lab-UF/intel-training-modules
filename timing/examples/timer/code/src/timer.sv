@@ -23,12 +23,12 @@
 // done   : Asserted after "cycles" cycles have elapsed. Remains asserted
 //          until go is asserted again.
 //===================================================================
-
-module timer #(parameter int WIDTH=32)		   		  
+ 
+module timer #(parameter int WIDTH=32)	   		  
   (
-   input logic 		    clk,
-   input logic 		    rst,
-   input logic 		    go, 
+   input  		    clk,
+   input  		    rst,
+   input  		    go, 
    input [WIDTH-1:0] 	    cycles,
    output logic             done
    );
