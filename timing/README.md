@@ -16,7 +16,7 @@ The [examples](examples/) folder includes simple examples that explain the basic
     - [Video: Quartus Timing Analyzer Overview and Add Tree Explanation](https://youtu.be/HXS3JCx55Q4), [Slides (TBD)]()
 1. [Example: Timer](examples/timer)
     - Description: Illustrates how to reduce LUT delays by shrinking logic inputs using constants.
-    - [Video: Reducing LUT Delays (Timer Example)](https://www.youtube.com/watch?v=b8zSjXQZIh8), [Slides (TBD)]()
+    - [Video: Reducing LUT Delays (Timer Example)](https://youtu.be/h4NehzI0oio), [Slides (TBD)]()
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
