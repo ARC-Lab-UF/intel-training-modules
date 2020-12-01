@@ -14,9 +14,9 @@ The [examples](examples/) folder includes simple examples that explain the basic
 1. [Example: Add Tree](examples/add_tree)
     - Description: Illustrates how to identify a logic-delay bottleneck with the Quartus Timing Analyzer, and then resolve that bottleneck using pipelining.
     - [Video: Quartus Timing Analyzer Overview and Add Tree Explanation](https://youtu.be/YHuv0HHkv-k), [Slides (TBD)]()
-1. [Example: Timer](examples/add_tree)
+1. [Example: Timer](examples/timer)
     - Description: Illustrates how to reduce LUT delays by shrinking logic inputs using constants.
-    - [Video: Reducing LUT Delays (Timer Example) (TBD)](), [Slides (TBD)]()
+    - [Video: Reducing LUT Delays (Timer Example)](https://www.youtube.com/watch?v=b8zSjXQZIh8), [Slides (TBD)]()
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
