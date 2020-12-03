@@ -17,6 +17,8 @@ The [examples](examples/) folder includes simple examples that explain the basic
 1. [Example: Timer](examples/timer)
     - Description: Illustrates how to reduce LUT delays by shrinking logic inputs using constants.
     - [Video: Reducing LUT Delays (Timer Example)](https://youtu.be/h4NehzI0oio), [Slides](examples/timer/timer.pptx)
+1. [Example: Timer2](examples/timer2)
+    - Description: Improves upon the timer example to show how to further improve timing by simplifying logic.    
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
