@@ -4,7 +4,7 @@ This exercise illustrates how to identify a timing bottleneck using the Quartus 
 
 The unoptimized example is provided in the code/src/ directory, along with corresponding Quartus project files in the code/ directory. The solution is provided in the solution/ directory.
 
-[This video](https://youtu.be/HXS3JCx55Q4) explains the exercise and its corresponding solution.
+[This video](https://youtu.be/_rEisLZZIjI) explains the exercise and its corresponding solution.
 
 # Instructions
 
