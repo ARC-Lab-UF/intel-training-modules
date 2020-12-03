@@ -13,7 +13,7 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Describes different types of bottlenecks and common optimization strategies for eliminating those bottlenecks.
 1. [Example: Add Tree](exercises/add_tree)
     - Description: Illustrates how to identify a logic-delay bottleneck with the Quartus Timing Analyzer, and then resolve that bottleneck using pipelining.
-    - [Video: Quartus Timing Analyzer Overview and Add Tree Explanation](https://youtu.be/HXS3JCx55Q4), [Slides](exercises/add_tree/analyzer_tutorial.pptx)
+    - [Video: Quartus Timing Analyzer Overview and Add Tree Explanation](https://youtu.be/_rEisLZZIjI), [Slides](exercises/add_tree/analyzer_tutorial.pptx)
 1. [Example: Timer](exercises/timer)
     - Description: Illustrates how to reduce LUT delays by shrinking logic inputs using constants.
     - [Video: Reducing LUT Delays (Timer Example)](https://youtu.be/sqXiR0RHgTA), [Slides](exercises/timer/timer.pptx)
