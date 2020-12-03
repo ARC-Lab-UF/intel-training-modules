@@ -5,7 +5,7 @@ The provided files use a clock constraint of 200 MHz, which Quartus cannot achie
 
 The unoptimized example is provided in the code/src/ directory, along with corresponding Quartus project files in the code/ directory. The solution is provided in the solution/ directory.
 
-[This video](https://youtu.be/HXS3JCx55Q4) explains the exercise and its corresponding solution.
+[This video](https://youtu.be/h4NehzI0oio) explains the exercise and its corresponding solution.
 
 # Instructions
 
