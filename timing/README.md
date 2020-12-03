@@ -7,7 +7,7 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
 # Suggested Study Order
 
 1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) (Optional if using Quartus locally)
-1. [Video: Background and Challenges](https://youtu.be/Tj2TseM7pr8), [Slides](timing_background.pptx)
+1. [Video: Background and Challenges](https://youtu.be/9Ld9Sr_JE9o), [Slides](timing_background.pptx)
     - Description: Provides an overview of necessary background material for understanding challenges of timing optimization.
 1. [Video: Optimization Strategies](https://youtu.be/EZtRwBts9i8), [Slides](timing_opt.pptx)
     - Description: Describes different types of bottlenecks and common optimization strategies for eliminating those bottlenecks.
