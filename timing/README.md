@@ -16,7 +16,7 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - [Video: Quartus Timing Analyzer Overview and Add Tree Explanation](https://youtu.be/HXS3JCx55Q4), [Slides](exercises/add_tree/analyzer_tutorial.pptx)
 1. [Example: Timer](exercises/timer)
     - Description: Illustrates how to reduce LUT delays by shrinking logic inputs using constants.
-    - [Video: Reducing LUT Delays (Timer Example)](https://youtu.be/h4NehzI0oio), [Slides](exercises/timer/timer.pptx)
+    - [Video: Reducing LUT Delays (Timer Example)](https://youtu.be/sqXiR0RHgTA), [Slides](exercises/timer/timer.pptx)
 1. [Example: Timer2](exercises/timer2)
     - Description: Improves upon the timer example to show how to further improve timing by simplifying logic.    
 
