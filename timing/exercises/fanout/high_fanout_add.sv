@@ -1,16 +1,25 @@
+// Greg Stitt
+// University of Florida
+
 module high_fanout_add_slow
-  #(parameter int DATA_WIDTH,
-    parameter int NUM_ADDERS,
-    parameter int MAX_FANOUT)
+  #(
+    parameter int DATA_WIDTH,
+    parameter int NUM_ADDERS
+    )
    (
-    input logic clk,
-    input logic rst,
-    input logic [DATA_WIDTH-1:0] in,
+    input logic 		  clk,
+    input logic 		  rst,
+    input logic [DATA_WIDTH-1:0]  in,
     output logic [DATA_WIDTH-1:0] out[NUM_ADDERS]
     );
 
    logic [DATA_WIDTH-1:0] in_r;
-   //(* maxfan = MAX_FANOUT *) logic [DATA_WIDTH-1:0] in_r; 
+   // We don't need this register here, but to make all the different modules
+   // look the same, we add it for consistency. Also, we use the dont_replicate
+   // synthesis attribute to make sure Quartus doesn't automatically duplicate
+   // the register for us. In many cases, we want Quartus to duplicate the
+   // register, but here we need a baseline that is guaranteed not to have
+   // duplicated registers in order to show the benefits of duplication.
    (* dont_replicate *) logic [DATA_WIDTH-1:0] 	 add_in_r;
    
    always_ff @(posedge clk or posedge rst) begin
@@ -22,7 +31,51 @@ module high_fanout_add_slow
 	 in_r <= in;
 	 add_in_r <= in_r;	 
 	 for (int i=0; i < NUM_ADDERS; i++) out[i] <= add_in_r + DATA_WIDTH'(i);
-	
+      end
+   end
+endmodule
+
+
+module high_fanout_add_auto_reg_dup
+  #(parameter int DATA_WIDTH,
+    parameter int NUM_ADDERS,
+    parameter int MAX_FANOUT)
+   (
+    input logic 		  clk,
+    input logic 		  rst,
+    input logic [DATA_WIDTH-1:0]  in,
+    output logic [DATA_WIDTH-1:0] out[NUM_ADDERS]
+    );
+      
+   logic [DATA_WIDTH-1:0] 	  in_r;
+
+   // In many cases, a synthesis tool will perform register duplication
+   // automatically depending on the timing constraint.
+   // If we want to control the amount of register duplication, Quartus
+   // allows us to specify a maxfan attribute for the register variable.
+   // The corresponding integer, e.g. MAX_FANOUT, creates a threshold where 
+   // any time the amount of fanout from the add_in_r register increases past 
+   // the threshold, Quartus will create another duplicated version of the
+   // register.
+   (* maxfan = MAX_FANOUT *) logic [DATA_WIDTH-1:0] 	 add_in_r;
+
+   // Quartus also allows for synthesis settings to be specified in a string
+   // following the variable declaration, as shown below. For this specific
+   // example, this won't work because the attribute is specified in a string.
+   // That string isn't elaborated, so MAX_FANOUT is never replaced with the 
+   // corresponding integer, which will cause Quartus to report the warning:
+   // Warning(19887): Value '"MAX_FANOUT"' for assignment 'maxfan' is an invalid value and assignment is being ignored.
+   //
+   // logic [DATA_WIDTH-1:0] 	 add_in_r /* synthesis maxfan = MAX_FANOUT */;
+    
+   always_ff @(posedge clk or posedge rst) begin
+      if (rst) begin
+	 for (int i=0; i < NUM_ADDERS; i++) out[i] <= '0;	 
+      end
+      else begin
+	 in_r <= in;
+	 add_in_r <= in_r;
+	 for (int i=0; i < NUM_ADDERS; i++) out[i] <= add_in_r + DATA_WIDTH'(i);
       end
    end
 endmodule
@@ -103,51 +156,6 @@ module high_fanout_add_manual_reg_dup
 endmodule // high_fanout_add_manual_reg_dup
 
 
-module high_fanout_add_auto_reg_dup
-  #(parameter int DATA_WIDTH,
-    parameter int NUM_ADDERS,
-    parameter int MAX_FANOUT)
-   (
-    input logic 		  clk,
-    input logic 		  rst,
-    input logic [DATA_WIDTH-1:0]  in,
-    output logic [DATA_WIDTH-1:0] out[NUM_ADDERS]
-    );
-      
-   logic [DATA_WIDTH-1:0] 	  in_r;
-
-   // In many cases, a synthesis tool will perform register duplication
-   // automatically depending on the timing constraint.
-   // If we want to control the amount of register duplication, Quartus
-   // allows us to specify a maxfan attribute for the register variable.
-   // The corresponding integer, e.g. MAX_FANOUT, creates a threshold where 
-   // any time the amount of fanout from the add_in_r register increases past 
-   // the threshold, Quartus will create another duplicated version of the
-   // register.
-   (* maxfan = MAX_FANOUT *) logic [DATA_WIDTH-1:0] 	 add_in_r;
-
-   // Quartus also allows for synthesis settings to be specified in a string
-   // following the variable declaration, as shown below. For this specific
-   // example, this won't work because the attribute is specified in a string.
-   // That string isn't elaborated, so MAX_FANOUT is never replaced with the 
-   // corresponding integer, which will cause Quartus to report the warning:
-   // Warning(19887): Value '"MAX_FANOUT"' for assignment 'maxfan' is an invalid value and assignment is being ignored.
-   //
-   // logic [DATA_WIDTH-1:0] 	 add_in_r /* synthesis maxfan = MAX_FANOUT */;
-    
-   always_ff @(posedge clk or posedge rst) begin
-      if (rst) begin
-	 for (int i=0; i < NUM_ADDERS; i++) out[i] <= '0;	 
-      end
-      else begin
-	 in_r <= in;
-	 add_in_r <= in_r;
-	 for (int i=0; i < NUM_ADDERS; i++) out[i] <= add_in_r + DATA_WIDTH'(i);
-      end
-   end
-endmodule
-
-
 module high_fanout_add
   #(
     parameter int DATA_WIDTH=8,
@@ -173,8 +181,7 @@ module high_fanout_add
 
    
    high_fanout_add_slow #(.DATA_WIDTH(DATA_WIDTH),
-			  .NUM_ADDERS(NUM_ADDERS),
-			  .MAX_FANOUT(MAX_FANOUT)) top (.*);
+			  .NUM_ADDERS(NUM_ADDERS)) top (.*);
   
  
 endmodule
