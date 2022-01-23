@@ -2,7 +2,7 @@
 
 These repository illustrates how to perform timing optimization (or timing closure) using Intel Quartus software. The provided examples are designed to work on the Intel DevCloud, but can also be performed by installing Quartus locally.
 
-The [exercises](exercises/) folder includes simple circuits that explain the basics of timing optimization by providing unoptimized code that can be analyzed to identify timing bottlenecks, and then optimized using the presented techniques.
+The [exercises](exercises/) folder includes simple circuits that explain the basics of timing optimization by providing the reader with unoptimized code that they can analyze to identify timing bottlenecks, and then optimize using the presented techniques. Each exercise includes a solution for reference. The [examples](examples/) folder demonstrates timing optimization examples without corresponding exercises.
 
 # Suggested Study Order
 
