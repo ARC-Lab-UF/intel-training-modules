@@ -21,6 +21,8 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Improves upon the timer example to show how to further improve timing by simplifying logic.   
 1. [Example: Register Duplication](examples/register_duplication)
     - Description: Demonstrates how to reduce fanout bottlenecks resulting from high register fanout via register duplication. 
+1. [Example: Reset Reduction](examples/reset_reduction)
+    - Description: Demonstrates how high fanout reset signals can create timing bottlenecks, and that be removing resets from registers that don't need them is a simple way to improve clock frequencies.
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
