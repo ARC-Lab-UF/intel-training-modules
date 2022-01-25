@@ -1,0 +1,18 @@
+Fitter Status : Successful - Tue Jan 25 23:16:28 2022
+Quartus Prime Version : 20.1.0 Build 711 06/05/2020 SJ Standard Edition
+Revision Name : monitor
+Top-level Entity Name : monitor
+Family : MAX 10
+Device : 10M08DAF484C8G
+Timing Models : Final
+Total logic elements : 85 / 8,064 ( 1 % )
+    Total combinational functions : 85 / 8,064 ( 1 % )
+    Dedicated logic registers : 73 / 8,064 ( < 1 % )
+Total registers : 73
+Total pins : 3 / 250 ( 1 % )
+Total virtual pins : 66
+Total memory bits : 0 / 387,072 ( 0 % )
+Embedded Multiplier 9-bit elements : 0 / 48 ( 0 % )
+Total PLLs : 0 / 2 ( 0 % )
+UFM blocks : 0 / 1 ( 0 % )
+ADC blocks : 0 / 1 ( 0 % )
