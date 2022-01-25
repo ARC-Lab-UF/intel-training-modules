@@ -23,6 +23,8 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Demonstrates how to reduce fanout bottlenecks resulting from high register fanout via register duplication. 
 1. [Example: Reset Reduction](examples/reset_reduction)
     - Description: Demonstrates how high fanout reset signals can create timing bottlenecks, and that be removing resets from registers that don't need them is a simple way to improve clock frequencies.
+1. [Example: Reset Tree](examples/reset_tree)
+    - Description: Demonstrates an advanced technique for distributing a reset with a register tree to reduce maximum reset fanout. 
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
