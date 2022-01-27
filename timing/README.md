@@ -25,6 +25,8 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Demonstrates how high fanout reset signals can create timing bottlenecks, and that be removing resets from registers that don't need them is a simple way to improve clock frequencies.
 1. [Example: Reset Tree](examples/reset_tree)
     - Description: Demonstrates an advanced technique for distributing a reset with a register tree to reduce maximum reset fanout. 
+1. [Example: Multicycle Path](examples/multicycle_path)
+    - Description: Demonstrates how to use multicycle paths to improve timing. 
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
