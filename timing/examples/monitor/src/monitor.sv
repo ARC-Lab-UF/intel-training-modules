@@ -1,21 +1,21 @@
 // Greg Stitt
 // University of Florida
 
-module fifo
+module fifo_slow
   #(
     parameter WIDTH=8,
     parameter DEPTH=32
     )
    (
-    input logic 	     clk,
-    input logic 	     rst,
-    output logic 	     full,
-    input logic 	     wr_en,
-    input logic [WIDTH-1:0]  wr_data,
+    input logic 		   clk,
+    input logic 		   rst,
+    output logic 		   full,
+    input logic 		   wr_en,
+    input logic [WIDTH-1:0] 	   wr_data,
     output logic [$clog2(DEPTH):0] count,
-    output logic 	     empty, 
-    input logic 	     rd_en,
-    output logic [WIDTH-1:0] rd_data  
+    output logic 		   empty, 
+    input logic 		   rd_en,
+    output logic [WIDTH-1:0] 	   rd_data  
     );
 
    logic [WIDTH-1:0] 	     ram[DEPTH];
@@ -30,13 +30,13 @@ module fifo
 	 count = '0;	 
       end
       else begin
-	 if (valid_wr) begin
+	 if (wr_en) begin
 	    ram[wr_addr] = wr_data;
 	    wr_addr ++;
 	    count ++;	    
 	 end
 
-	 if (valid_rd) begin
+	 if (rd_en) begin
 	    rd_addr ++;
 	    count --;
 	 end	   
@@ -51,6 +51,70 @@ module fifo
     
 endmodule // fifo
 
+
+module fifo
+  #(
+    parameter WIDTH=8,
+    parameter DEPTH=32
+    )
+   (
+    input logic 		   clk,
+    input logic 		   rst,
+    output logic 		   full,
+    input logic 		   wr_en,
+    input logic [WIDTH-1:0] 	   wr_data,
+    output logic [$clog2(DEPTH):0] count,
+    output logic 		   empty, 
+    input logic 		   rd_en,
+    output logic [WIDTH-1:0] 	   rd_data  
+    );
+
+   logic [WIDTH-1:0] 	     ram[DEPTH];
+   logic [$clog2(DEPTH)-1:0] wr_addr_r, rd_addr_r;
+   logic [$clog2(DEPTH):0]   count_r, next_count;
+   logic 		     valid_wr, valid_rd;
+   logic signed [1:0] 	     count_update;
+
+   assign count = count_r;
+      
+   always_ff @(posedge clk, posedge rst) begin
+      if (rst) begin
+	 rd_addr_r = '0;
+	 wr_addr_r = '0;
+	 count_r = '0;	 
+      end
+      else begin
+	 count_r <= next_count;
+	 
+	 if (valid_wr) begin
+	    ram[wr_addr_r] = wr_data;
+	    wr_addr_r <= wr_addr_r + 1'b1;
+	 end
+	 	 
+	 if (valid_rd) begin	    
+	    rd_addr_r <= rd_addr_r + 1'b1;
+	 end	   
+      end
+   end // always_ff @
+
+   // Either increment or decrement the count based on the rd/wr status.
+   always_comb begin
+      case ({wr_en, rd_en})
+	 2'b10 : count_update = 2'(1);
+	 2'b01 : count_update = 2'(-1);
+	 default : count_update = '0; 	
+      endcase
+   end
+   
+   assign next_count = count_r + signed'(count_update);
+      
+   assign rd_data = ram[rd_addr_r];   
+   assign valid_wr = wr_en && !full;
+   assign valid_rd = rd_en && !empty;
+   assign full = count == DEPTH;
+   assign empty = count == 0;
+    
+endmodule // fifo
 
 module monitor_slow
   #(

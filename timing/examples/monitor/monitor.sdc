@@ -91,7 +91,8 @@ set_clock_uncertainty -fall_from [get_clocks {clk}] -fall_to [get_clocks {clk}] 
 #**************************************************************
 # Set Multicycle Path
 #**************************************************************
-#set_multicycle_path -from {monitor_fast:top|count_r[0]} -to {monitor_fast:top|count_r[63]} -setup -end 10
+set_multicycle_path -from {monitor_fast:top|count_r*} -to {monitor_fast:top|count_r*} -setup 2
+set_multicycle_path -from {monitor_fast:top|count_r*} -to {monitor_fast:top|count_r*} -hold 1
 
 
 #**************************************************************
