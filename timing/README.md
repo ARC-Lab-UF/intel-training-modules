@@ -27,6 +27,10 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Demonstrates an advanced technique for distributing a reset with a register tree to reduce maximum reset fanout. 
 1. [Example: Multicycle Path](examples/multicycle_path)
     - Description: Demonstrates how to use multicycle paths to improve timing. 
+1. [Example: Count](examples/count)
+    - Description: Demonstrates how to reduce resources and improve timing for multiple conditional add/sub operations.
+1. [Example: Add/Sub](examples/add_sub) (REQUIRES QUARTUS PRIME PRO)
+    - Description: Demonstrates resource and timing tradeoffs between different adder/subtractor implementations.
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
