@@ -29,6 +29,8 @@ The [exercises](exercises/) folder includes simple circuits that explain the bas
     - Description: Demonstrates how to use multicycle paths to improve timing. 
 1. [Example: Count](examples/count)
     - Description: Demonstrates how to reduce resources and improve timing for multiple conditional add/sub operations.
+1. [Example: 3-input Adder](examples/adder_3input) (REQUIRES QUARTUS PRIME PRO)
+    - Description: Demonstrates how 10-series FPGAs can implement some 3-input adders with the same number of resources as 2-input adders.
 1. [Example: Add/Sub](examples/add_sub) (REQUIRES QUARTUS PRIME PRO)
     - Description: Demonstrates resource and timing tradeoffs between different adder/subtractor implementations.
 
