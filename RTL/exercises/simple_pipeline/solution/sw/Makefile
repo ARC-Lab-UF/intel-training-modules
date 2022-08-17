@@ -3,14 +3,15 @@ include common_include.mk
 # Executable name
 TEST = afu
 
-BBB_DIR = ${FPGA_BBB_CCI_SRC}/BBB_cci_mpf/sw/include/
+BBB_DIR = ${FPGA_BBB_CCI_INSTALL}/include/
+BBB_LIB_DIR = ${FPGA_BBB_CCI_INSTALL}/lib64/
 
 # Build directory
 OBJDIR = obj
 CFLAGS += -I./$(OBJDIR)
 CPPFLAGS += -I./$(OBJDIR) -I$(BBB_DIR)
 
-LDFLAGS += -lopae-cxx-core -lMPF-cxx -lMPF
+LDFLAGS += -lopae-cxx-core -L$(BBB_LIB_DIR) -lMPF-cxx -lMPF
 
 # Files and folders
 SRCS = main.cpp AFU.cpp
