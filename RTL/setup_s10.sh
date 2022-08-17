@@ -1,5 +1,8 @@
+# These exports assume you have run the setup script to install the BBB code.
 export FPGA_BBB_CCI_SRC=~/intel-fpga-bbb
 export FPGA_BBB_CCI_INSTALL=~/intel-fpga-bbb-install
+
+# Tool exports.
 export ALTERAOCLSDKROOT=/glob/development-tools/versions/fpgasupportstack/d5005/2.0.1/inteldevstack/hld
 export LD_LIBRARY_PATH=/glob/development-tools/versions/fpgasupportstack/d5005/2.0.1/inteldevstack/d5005_ias_2_0_1_b237/opencl/opencl_bsp/linux64/lib:/glob/development-tools/versions/fpgasupportstack/d5005/2.0.1/inteldevstack/hld/host/linux64/lib:/glob/development-tools/versions/fpgasupportstack/d5005/2.0.1/inteldevstack/hld/linux64/lib:$FPGA_BBB_CCI_INSTALL/lib64
 export INTELFPGAOCLSDKROOT=/glob/development-tools/versions/fpgasupportstack/d5005/2.0.1/inteldevstack/hld
