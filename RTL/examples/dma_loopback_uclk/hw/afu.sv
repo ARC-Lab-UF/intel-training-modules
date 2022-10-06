@@ -89,6 +89,8 @@ module afu
    count_t 	size;
    logic 	go;
    logic 	done;
+   logic count_en, first_not_empty;
+   logic [63:0] counter_read_latency, counter_read, counter_total;
 
    // Software provides 64-bit virtual byte addresses.
    // Again, this constant would ideally get read from the DMA interface if
@@ -106,36 +108,69 @@ module afu
        )
      memory_map (.*);
 
-   // Assign the starting addresses from the memory map.
-   assign dma.rd_addr = rd_addr;
-   assign dma.wr_addr = wr_addr;
-   
-   // Use the size (# of cache lines) specified by software.
-   assign dma.rd_size = size;
-   assign dma.wr_size = size;
+  // Add mmap'd counters for testing DMA read/write times and latency.
+  always @(posedge clk or posedge rst) begin
+    if (rst) begin
+      counter_read_latency  <= '0;
+      counter_read          <= '0;
+      counter_total         <= '0;
+      first_not_empty       <= '0;
+      count_en              <= '0;
+    end else begin
+      if (go == '1) begin
+        counter_read_latency  <= '0;
+        counter_read          <= '0;
+        counter_total         <= '0;
+        first_not_empty       <= '0;
+        count_en              <= '1;
+      end
 
-   // Start both the read and write channels when the MMIO go is received.
-   // Note that writes don't actually occur until dma.wr_en is asserted.
-   assign dma.rd_go = go;
-   assign dma.wr_go = go;
+      if (count_en == '1) begin
+        if (!dma.empty && !first_not_empty) begin
+          first_not_empty <= '1;
+        end
 
-   // Read from the DMA when there is data available (!dma.empty) and when
-   // it is safe to write data (!dma.full).
-   assign dma.rd_en = !dma.empty && !dma.full;
+        if (!first_not_empty) begin
+          counter_read_latency <= counter_read_latency + 1;
+        end
 
-   // Since this is a simple loopback, write to the DMA anytime we read.
-   // For most applications, write enable would be asserted when there is an
-   // output from a pipeline. In this case, the "pipeline" is a wire.
-   assign dma.wr_en = dma.rd_en;
+        if (!dma.rd_done) begin
+          counter_read <= counter_read + 1;
+        end
 
-   // Write the data that is read.
-   assign dma.wr_data = dma.rd_data;
+        if (!done) begin
+          counter_total <= counter_total + 1;
+        end
+      end
+    end
+  end
 
-   // The AFU is done when the DMA is done writing size cache lines.
-   assign done = dma.wr_done;
-            
+  // Assign the starting addresses from the memory map.
+  assign dma.rd_addr = rd_addr;
+  assign dma.wr_addr = wr_addr;
+  
+  // Use the size (# of cache lines) specified by software.
+  assign dma.rd_size = size;
+  assign dma.wr_size = size;
+
+  // Start both the read and write channels when the MMIO go is received.
+  // Note that writes don't actually occur until dma.wr_en is asserted.
+  assign dma.rd_go = go;
+  assign dma.wr_go = go;
+
+  // Read from the DMA when there is data available (!dma.empty) and when
+  // it is safe to write data (!dma.full).
+  assign dma.rd_en = !dma.empty && !dma.full;
+
+  // Since this is a simple loopback, write to the DMA anytime we read.
+  // For most applications, write enable would be asserted when there is an
+  // output from a pipeline. In this case, the "pipeline" is a wire.
+  assign dma.wr_en = dma.rd_en;
+
+  // Write the data that is read.
+  assign dma.wr_data = dma.rd_data;
+
+  // The AFU is done when the DMA is done writing size cache lines.
+  assign done = dma.wr_done;
+
 endmodule
-
-
-
-

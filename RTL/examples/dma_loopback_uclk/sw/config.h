@@ -25,7 +25,7 @@ typedef volatile int dma_data_t;
 // the CPU. Defining this flag causes the processor to periodically sleep
 // during this polling.
 // NOTE: For execution on the FPGA, comment this out.
-#define SLEEP_WHILE_WAITING
+// #define SLEEP_WHILE_WAITING
 
 // The number of milliseconds to sleep when SLEEP_WHILE_WAITING is defined.
 const unsigned SLEEP_MS = 10;
@@ -40,7 +40,10 @@ enum MmioAddr {
   MMIO_RD_ADDR=0x0052,
   MMIO_WR_ADDR=0x0054,
   MMIO_SIZE=0x0056,
-  MMIO_DONE=0x0058
+  MMIO_DONE=0x0058,
+  MMIO_COUNTER_READ_LATENCY=0x005A,
+  MMIO_COUNTER_READ=0x005C,
+  MMIO_COUNTER_TOTAL=0x005E
 };
 
 

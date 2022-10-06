@@ -18,17 +18,17 @@
 //
 // Description: This application demonstrates a DMA AFU where the FPGA transfers
 // data from an input array into an output array.
-// 
+//
 // The example demonstrates an extension of the AFU wrapper class that uses
 // AFU::malloc() to dynamically allocate virtually contiguous memory that can
 // be accessed by both software and the AFU.
 
-// INSTRUCTIONS: Change the configuration settings in config.h to test 
+// INSTRUCTIONS: Change the configuration settings in config.h to test
 // different types of data.
 
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <cmath>
 
 #include <opae/utils.h>
 
@@ -40,9 +40,9 @@
 
 using namespace std;
 
-
 void printUsage(char *name);
-bool checkUsage(int argc, char *argv[], unsigned long &size, unsigned long &num_tests);
+bool checkUsage(int argc, char *argv[], unsigned long &size,
+                unsigned long &num_tests);
 
 int main(int argc, char *argv[]) {
 
@@ -53,117 +53,128 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    // Create an AFU object to provide basic services for the FPGA. The 
+    // Create an AFU object to provide basic services for the FPGA. The
     // constructor searchers available FPGAs for one with an AFU with the
     // the specified ID
-    AFU afu(AFU_ACCEL_UUID); 
+    AFU afu(AFU_ACCEL_UUID);
     bool failed = false;
 
-    cout << "Measured AFU Clock Frequency: " << afu.measureClock() / 1e6
-	 << "MHz" << endl;
+    cout << "\nMeasured AFU Clock Frequency: " << afu.measureClock() / 1e6
+         << "MHz" << endl;
 
-    for (unsigned test=0; test < num_tests; test++) {
+    uint64_t counter_read_latency;
+    uint64_t counter_read;
+    uint64_t counter_total;
 
-      // Allocate memory for the FPGA. Any memory used by the FPGA must be 
+    for (unsigned test = 0; test < num_tests; test++) {
+
+      // Allocate memory for the FPGA. Any memory used by the FPGA must be
       // allocated with AFU::malloc(), or AFU::mallocNonvolatile() if you
       // want to pass the pointer to a function that does not have the volatile
-      // qualifier. Use of non-volatile pointers is not guaranteed to work 
-      // depending on the compiler.   
-      auto input  = afu.malloc<dma_data_t>(size);
-      auto output  = afu.malloc<dma_data_t>(size);  
+      // qualifier. Use of non-volatile pointers is not guaranteed to work
+      // depending on the compiler.
+      auto input = afu.malloc<dma_data_t>(size);
+      auto output = afu.malloc<dma_data_t>(size);
 
-      cout << "Starting Test " << test << "...";
+      cout << "\n--------- Starting Test " << test << "-------------" << endl;
 
       // Initialize the input and output memory.
-      for (unsigned i=0; i < size; i++) {
-	input[i] = (dma_data_t) rand();
-	output[i] = 0;
+      for (unsigned i = 0; i < size; i++) {
+        input[i] = (dma_data_t)rand();
+        output[i] = 0;
       }
-    
+
       // Inform the FPGA of the starting read and write address of the arrays.
-      afu.write(MMIO_RD_ADDR, (uint64_t) input);
-      afu.write(MMIO_WR_ADDR, (uint64_t) output);
+      afu.write(MMIO_RD_ADDR, (uint64_t)input);
+      afu.write(MMIO_WR_ADDR, (uint64_t)output);
 
       // The FPGA DMA only handles cache-line transfers, so we need to convert
       // the array size to cache lines.
-      unsigned total_bytes = size*sizeof(dma_data_t);
-      unsigned num_cls = ceil((float) total_bytes / (float) AFU::CL_BYTES);
+      unsigned total_bytes = size * sizeof(dma_data_t);
+      unsigned num_cls = ceil((float)total_bytes / (float)AFU::CL_BYTES);
+      cout << "Cache lines to send: " << num_cls << endl;
       afu.write(MMIO_SIZE, num_cls);
 
       // Start the FPGA DMA transfer.
-      afu.write(MMIO_GO, 1);  
+      afu.write(MMIO_GO, 1);
 
       // Wait until the FPGA is done.
       while (afu.read(MMIO_DONE) == 0) {
 #ifdef SLEEP_WHILE_WAITING
-	this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
+        this_thread::sleep_for(chrono::milliseconds(SLEEP_MS));
 #endif
       }
-        
+
       // Verify correct output.
       // NOTE: This could be replaced with memcp, but that is only possible
-      // when not using volatile data (i.e. AFU::mallocNonvolatile()). 
+      // when not using volatile data (i.e. AFU::mallocNonvolatile()).
       unsigned errors = 0;
-      for (unsigned i=0; i < size; i++) {
-	if (output[i] != input[i]) {
-	  errors++;
-	}
+      for (unsigned i = 0; i < size; i++) {
+        if (output[i] != input[i]) {
+          errors++;
+        }
       }
+      
+      counter_read_latency = afu.read(MMIO_COUNTER_READ_LATENCY);
+      counter_read = afu.read(MMIO_COUNTER_READ);
+      counter_total = afu.read(MMIO_COUNTER_TOTAL);
 
+      cout << "counter_read_latency = " << counter_read_latency << endl; 
+      cout << "counter_read = " << counter_read << endl; 
+      cout << "counter_total = " << counter_total << endl; 
+      
       if (errors > 0) {
-	cout << "Failed with " << errors << " errors." << endl;
-	failed = true;
+        cout << "Failed with " << errors << " errors." << endl;
+        failed = true;
+      } else {
+        cout << "Succeeded." << endl;
       }
-      else {
-	cout << "Succeeded." << endl;
-      }
-    
+      cout << "--------------------------------------\n";
+
       // Free the allocated memory.
       afu.free(input);
       afu.free(output);
-    } 
+
+
+    }
+
 
     if (failed) {
       cout << "DMA tests failed." << endl;
       return EXIT_FAILURE;
     }
 
-    cout << "All DMA Tests Successful!!!" << endl;
+    cout << "\nAll DMA Tests Successful!!!\n\n" << endl;
     return EXIT_SUCCESS;
   }
-  // Exception handling for all the runtime errors that can occur within 
+  // Exception handling for all the runtime errors that can occur within
   // the AFU wrapper class.
-  catch (const fpga_result& e) {    
-    
+  catch (const fpga_result &e) {
+
     // Provide more meaningful error messages for each exception.
     if (e == FPGA_BUSY) {
       cerr << "ERROR: All FPGAs busy." << endl;
-    }
-    else if (e == FPGA_NOT_FOUND) { 
-      cerr << "ERROR: FPGA with accelerator " << AFU_ACCEL_UUID 
-	   << " not found." << endl;
-    }
-    else {
+    } else if (e == FPGA_NOT_FOUND) {
+      cerr << "ERROR: FPGA with accelerator " << AFU_ACCEL_UUID << " not found."
+           << endl;
+    } else {
       // Print the default error string for the remaining fpga_result types.
-      cerr << "ERROR: " << fpgaErrStr(e) << endl;    
+      cerr << "ERROR: " << fpgaErrStr(e) << endl;
     }
-  }
-  catch (const runtime_error& e) {    
+  } catch (const runtime_error &e) {
     cerr << e.what() << endl;
-  }
-  catch (const opae::fpga::types::no_driver& e) {
+  } catch (const opae::fpga::types::no_driver &e) {
     cerr << "ERROR: No FPGA driver found." << endl;
   }
 
   return EXIT_FAILURE;
 }
 
-
 void printUsage(char *name) {
 
-  cout << "Usage: " << name << " size num_tests\n"     
+  cout << "Usage: " << name << " size num_tests\n"
        << "size (positive integer amount of dma_data_t to transfer)\n"
-       << "num_tests (positive integer amount of \"size\" DMA tests to run)" 
+       << "num_tests (positive integer amount of \"size\" DMA tests to run)"
        << endl;
 }
 
@@ -172,29 +183,26 @@ void printUsage(char *name) {
 unsigned long stringToPositiveInt(char *str) {
 
   char *p;
-  long num = strtol(str, &p, 10);  
+  long num = strtol(str, &p, 10);
   if (p != 0 && *p == '\0' && num > 0) {
     return num;
   }
 
   throw runtime_error("String is not a positive integer.");
-  return 0;  
+  return 0;
 }
 
+bool checkUsage(int argc, char *argv[], unsigned long &size,
+                unsigned long &num_tests) {
 
-bool checkUsage(int argc, char *argv[], 
-		unsigned long &size, unsigned long &num_tests) {
-  
   if (argc == 3) {
     try {
       size = stringToPositiveInt(argv[1]);
       num_tests = stringToPositiveInt(argv[2]);
-    }
-    catch (const runtime_error& e) {    
+    } catch (const runtime_error &e) {
       return false;
     }
-  }
-  else {
+  } else {
     return false;
   }
 
