@@ -2,7 +2,7 @@
 // Greg Stitt
 // University of Florida
 //
-// vector_add.cpp
+// vector_add_terse.cpp
 //
 // This SYCL program will create a parallel (vectorized) version of the following
 // sequential code:
