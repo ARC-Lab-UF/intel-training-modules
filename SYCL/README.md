@@ -6,6 +6,22 @@ The tutorial assumes you have some experience with C++, but includes an overview
 
 <!---The [exercises](exercises/) folder includes simple circuits that explain the basics of timing optimization by providing the reader with unoptimized code that they can analyze to identify timing bottlenecks, and then optimize using the presented techniques. Each exercise includes a solution for reference. The [examples](examples/) folder demonstrates timing optimization examples without corresponding exercises.--->
 
+# DevCloud Usage Instructions
+
+This tutorial assumes you already have a DevCloud account. To execute the included examples, when you log on to the DevCloud, you first need to find a suitable node. For most examples, this can be done in the following way:
+
+`qsub -I -l nodes=1:gen9:ppn=2`
+
+In general, you can search for available nodes with various properties (e.g., Gen9 CPU) using the following:
+
+`pbsnodes | grep -B 1 -A 8 "state = free" | grep -B 4 -A 4 gen9`
+
+This provides a list of available nodes. You can then manually log into one using the following (using node s001-n234 as an example):
+
+`qsub -I -l nodes=s001-n234:ppn=2`
+
+Once logged onto a node, you can execute these examples by following the example-specific compilation instructions.
+
 # Suggested Study Order
 
 1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) (Optional if using SYCL/DPC++ locally)
