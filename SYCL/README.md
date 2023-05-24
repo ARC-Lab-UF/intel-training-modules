@@ -27,11 +27,12 @@ Once logged onto a node, you can execute these examples by following the example
 # Suggested Study Order
 
 1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) (Optional if using SYCL/DPC++ locally)
-1. Modern C++ Overview, [Slides]()
+1. [C++ Crash Course for SYCL](cpp_crash_course.pptx)
     - Description: Provides an overview of C++ constructs and practices that are leveraged within SYCL.
     - Without this background, SYCL syntax can look very intimidating. Even if you are familiar with C++, this overview is recommended as a refresher for the modern constructs.
-1. OpenCL Background, [Slides]()
-    - Description: Provides a brief overview of OpenCL concepts that are leveraged within SYCL (e.g, platform model, work-items, work-groups, NDRange, etc.).
+1. [Heterogeneous Parallel Programming and OpenCL Overvivew](opencl_overview.pptx)
+    - Description: Provides overview of fundamental concepts of heterogeneous parallel programming, including OpenCL
+    - Provides necessary background on OpenCL concepts that are leveraged within SYCL (e.g, platform model, kernels, work-items, work-groups, NDRange, etc.).
 1. [Example: Vector Add](examples/vector_add)
     - Description: Vector addition example that introduces basic SYCL concepts (queues, kernels, buffers, accessors, device vs. host code). 
     - Demonstrates common mistakes with buffers and accessors.
