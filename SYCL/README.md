@@ -27,7 +27,7 @@ Once logged onto a node, you can execute these examples by following the example
 # Suggested Study Order
 
 1. [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions) (Optional if using SYCL/DPC++ locally)
-1. Modern C++ Overview, [Slides]()
+1. C++ Crash Course for SYCL, [Slides](cpp_crash_course.pptx)
     - Description: Provides an overview of C++ constructs and practices that are leveraged within SYCL.
     - Without this background, SYCL syntax can look very intimidating. Even if you are familiar with C++, this overview is recommended as a refresher for the modern constructs.
 1. OpenCL Background, [Slides]()
