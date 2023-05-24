@@ -48,6 +48,10 @@ Once logged onto a node, you can execute these examples by following the example
     - Demonstrates how to map different kernels onto different devices.
     - Demonstrates different parallelization strategies when using multiple devices.
     - NOTE: using multiple kernels for SAXPY is largely artificial and intended for illustration only. The demonstrated concepts are intended to be applied to larger examples.
+1. [Example: Matrix Add](examples/matrix_add)
+    - Description: addition of two matrices. 
+    - Demonstrates problematic issues when working with multi-dimensional data.
+    - Compares several strategies when using statically and dynamically sized matrices.    
 1. [Example: FPGA SAXPY]()
     - Description: Demonstrates how to specialize the earlier SAXPY example for field-programmable gate arrays (FPGAs).
 1. [Example: Accumulation](examples/accum)
