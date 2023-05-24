@@ -1,29 +1,45 @@
 # SAXPY (Single-Precision A times X plus Y)
 
-These programs demonstrate template parameter passing via lambda capture lists, in addition to common C++ problems. 
+These code examples show extensions to SYCL to implement a single-precision A times X plus Y (saxpy), where A is a scalar and X and Y are vectors. Here is the corresponding psuedo-code:
 
-* [saxpy1.cpp](saxpy1.cpp)
-  * Correct implementation of SAXPY demonstrating passing of scalars via lambda capture lists.
-  * Tests random integer values between 0 and 100 for all inputs.
-  
-* [saxpy2.cpp](saxpy2.cpp)
-  * Nearly identical code to the previous example, but tests random real numbers between 0 and 100.
-  * This version reports errors due to a common C++ bug, related to equality comparison of floating-point numbers. 
-  * MAIN POINT: Never compare floats for equality.
+    for (int i=0; i < VECTOR_SIZE; i++)
+        z[i] = a * x[i] + y[i];
 
-* [saxpy_correct.cpp](saxpy_correct.cpp)
-  * Adds a function to replace equality comparison of float outputs to instead provide "sufficiently equal" comparisons.
+One new concept shown by this example is passing scalar parameters to kernels. You could potentially pass a scalar parameter to a kernel by creating a single-element buffer/accessor, but 
+that requires a significant amount of code. This code shows how we can use C++ lambda capture lists to transfer scalar parameters. C++ technically allows us to pass any parameter
+this way, but SYCL only supports it for certain basic types due to the complexity of transferring data to the device. For example, SYCL does not allow you to transfer a vector to
+a kernel using a lambda capture list. It must be done with a buffer/accessor (or with USM).
+
+The example also demonstrate common C++ problems with floating-point numbers.
+
+IMPORTANT: Make sure to read through all comments for an explanation of the code.
+
+1. [saxpy_int.cpp](saxpy_int.cpp) 
+    - Modified version of SAXPY using integers. 
+    - Demonstrates passing of scalars via lambda capture lists.
+    - Tests random integer values between 0 and 100 for all inputs.  
+1.  [saxpy_bad.cpp](saxpy_bad.cpp)
+    - Similar code to the previous example, but uses single-precision real numbers.
+    - Reports errors due to a common C++ bug, related to equality comparison of floating-point numbers.   
+    - MAIN POINT: Never compare floats for equality.
+1. [saxpy_correct.cpp](saxpy_correct.cpp)
+    - Adds a function to replace equality comparison of floats to instead provide "sufficiently equal" comparisons.
     
-## Devcloud instructions
+## Compilation and Execution Instructions
 
-Find suitable node (e.g. with gen9 gpu):  
-`pbsnodes | grep -B 1 -A 8 "state = free" | grep -B 4 -A 4 gen9`
+First, make sure you have logged on to a suitable node [(see here)](../../../SYCL#devcloud-usage-instructions).
 
-Login with interactive shell (replace the nodes section with a free node specified by the previous command):   
-`qsub -I -l nodes=s001-n234:ppn=2`
+To compile all examples, simply type:
 
-Compile:   
-`icpx -fsycl input_file -o output_file -Wall -O3`
-   
-Run:   
-`./output_file`  
+`make`
+
+This will generate an executable for each example that you can run with:
+
+`./saxpy_int`
+`./saxpy_bad`
+`./saxpy_correct`
+etc.
+
+If you want to compile a specific example, type:
+
+`make example_name` where example_name is a .cpp file (but without the .cpp extension).
