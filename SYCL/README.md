@@ -20,7 +20,9 @@ This provides a list of available nodes. You can then manually log into one usin
 
 `qsub -I -l nodes=s001-n234:ppn=2`
 
-Once logged onto a node, you can execute these examples by following the example-specific compilation instructions.
+Once logged onto a node, you can execute these examples by following the example-specific compilation instructions. For custom compilations, you can use the following:
+
+`icpx -fsycl input_file -o output_file -Wall -O3`
 
 # Suggested Study Order
 
