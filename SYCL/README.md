@@ -37,10 +37,9 @@ Once logged onto a node, you can execute these examples by following the example
     - Description: Vector addition example that introduces basic SYCL concepts (queues, kernels, buffers, accessors, device vs. host code). 
     - Demonstrates common mistakes with buffers and accessors.
     - Demonstrates basic exception handling.
-    - Demonstrates terse coding style.
 1. [Example: SAXPY](examples/saxpy)
     - Description: Single-precision A times X plus Y, where A is a scalar, and X and Y are vectors. This is a common linear-algebra operation.
-    - Demonstrates parameter passing via lambda capture lists.
+    - Demonstrates scalar parameter passing via lambda capture lists.
     - Demonstrates common C++ bugs with floating-point comparisons, and corresponding solutions.
 1. [Example: Multi-Kernel/Device SAXPY](examples/multiple_kernels)
     - Description: Extends the SAXPY example to execute on multiple kernels, and then shows how to execute each kernel on a different device.
@@ -48,6 +47,10 @@ Once logged onto a node, you can execute these examples by following the example
     - Demonstrates how to map different kernels onto different devices.
     - Demonstrates different parallelization strategies when using multiple devices.
     - NOTE: using multiple kernels for SAXPY is largely artificial and intended for illustration only. The demonstrated concepts are intended to be applied to larger examples.
+1. [Example: Matrix Add](examples/matrix_add)
+    - Description: addition of two matrices. 
+    - Demonstrates problematic issues when working with multi-dimensional data.
+    - Compares several strategies when using statically and dynamically sized matrices.    
 1. [Example: FPGA SAXPY]()
     - Description: Demonstrates how to specialize the earlier SAXPY example for field-programmable gate arrays (FPGAs).
 1. [Example: Accumulation](examples/accum)
