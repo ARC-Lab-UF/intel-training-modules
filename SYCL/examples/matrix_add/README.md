@@ -1,29 +1,36 @@
 # Matrix Add
 
-These code examples show extensions to SYCL to implement a single-precision A times X plus Y (saxpy), where A is a scalar and X and Y are vectors. Here is the corresponding psuedo-code:
+These example demonstrate a matrix add:
+            
+    for (int i=0; i < NUM_ROWS; i++)
+        for (int j=0; j < NUM_COLS; j++)
+            out[i][j] = in1[i][j] + in2[i][j];
+        
 
-    for (int i=0; i < VECTOR_SIZE; i++)
-        z[i] = a * x[i] + y[i];
-
-One new concept shown by this example is passing scalar parameters to kernels. You could potentially pass a scalar parameter to a kernel by creating a single-element buffer/accessor, but 
-that requires a significant amount of code. This code shows how we can use C++ lambda capture lists to transfer scalar parameters. C++ technically allows us to pass any parameter
-this way, but SYCL only supports it for certain basic types due to the complexity of transferring data to the device. For example, SYCL does not allow you to transfer a vector to
-a kernel using a lambda capture list. It must be done with a buffer/accessor (or with USM).
-
-The example also demonstrate common C++ problems with floating-point numbers.
+While a matrix add by itself has a simple kernel, these examples are intended to illustrate many common problems when working with multi-dimensional data.
 
 IMPORTANT: Make sure to read through all comments for an explanation of the code.
 
-1. [saxpy_int.cpp](saxpy_int.cpp) 
-    - Modified version of SAXPY using integers. 
-    - Demonstrates passing of scalars via lambda capture lists.
-    - Tests random integer values between 0 and 100 for all inputs.  
-1.  [saxpy_bad.cpp](saxpy_bad.cpp)
-    - Similar code to the previous example, but uses single-precision real numbers.
-    - Reports errors due to a common C++ bug, related to equality comparison of floating-point numbers.   
-    - MAIN POINT: Never compare floats for equality.
-1. [saxpy_correct.cpp](saxpy_correct.cpp)
-    - Adds a function to replace equality comparison of floats to instead provide "sufficiently equal" comparisons.
+1. [matrix_add_bad.cpp](matrix_add_bad.cpp) 
+    - Demonstrates a common problem where buffered multiple-dimensional data structures are not stored in memory sequentially.
+    - NOTE: Intentionally does not compile, and is excluded from the make all target. You can manually compile it with: 
+     
+        `make matrix_add_bad` 
+    - IMPORTANT: All host data that will be used by the device must be stored sequentially in memory.    
+1.  [matrix_add_static1.cpp](matrix_add_static1.cpp)
+    - Demonstrates ony one solution for statically sized data (i.e., the size is a compile-time constant)
+    - Fixes the previous example by using an std::array of std:array, which is guaranteed to be stored sequentially.
+1.  [matrix_add_static2.cpp](matrix_add_static2.cpp)
+    - Demonstrates another solution for statically sized data using C-style multi-dimensional arrays.    
+1.  [matrix_add_dynamic1.cpp](matrix_add_dynamic1.cpp)
+    - Demonstrates another solution for dynamically sized data (i.e., size determined at run-time)
+    - Uses a common strategy of storing multi-dimensional data in a dynamically allocated 1D array with manual indexing computations.    
+1.  [matrix_add_dynamic2.cpp](matrix_add_dynamic2.cpp)
+    - Similar to previous example, but uses vectors instead of manually allocated memory,
+    - This is slightly safer, but still requires manual indexing computations throughout the code.
+1.  [matrix_add_dynamic3.cpp](matrix_add_dynamic3.cpp)
+    - Simplifies the previous dyanmic examples with a custom Matrix class that internally stores data sequentially, while overloading the [] operator to hide the manual indexing computations.
+    - I would strongly recommend this type of approach for multi-dimensional data, where you have a class that presents the data in multiple dimensional while internally storing it sequentially.
     
 ## Compilation and Execution Instructions
 
