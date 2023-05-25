@@ -41,11 +41,9 @@ Once logged onto a node, you can execute these examples by following the example
     - Description: Single-precision A times X plus Y, where A is a scalar, and X and Y are vectors. This is a common linear-algebra operation.
     - Demonstrates scalar parameter passing via lambda capture lists.
     - Demonstrates common C++ bugs with floating-point comparisons, and corresponding solutions.
-1. [Example: Multi-Kernel/Device SAXPY](examples/multiple_kernels)
+1. [Example: Multi-Kernel/Device SAXPY](examples/multi_kernel_saxpy)
     - Description: Extends the SAXPY example to execute on multiple kernels, and then shows how to execute each kernel on a different device.
-    - Demonstrates how to communicate and synchronize between multiple kernels.
-    - Demonstrates how to map different kernels onto different devices.
-    - Demonstrates different parallelization strategies when using multiple devices.
+    - Demonstrates how to communicate and synchronize between multiple kernels, how to map different kernels onto different devices, and different parallelization strategies.
     - NOTE: using multiple kernels for SAXPY is largely artificial and intended for illustration only. The demonstrated concepts are intended to be applied to larger examples.
 1. [Example: Matrix Add](examples/matrix_add)
     - Description: addition of two matrices. 
