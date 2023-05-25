@@ -1,7 +1,7 @@
 // Greg Stitt
 // University of Florida
 //
-// saxpy_multi_device2.cpp
+// saxpy_scatter.cpp
 //
 // This SYCL program will create a parallel (vectorized) version of the following
 // sequential code, while parallelizing it across two devices.

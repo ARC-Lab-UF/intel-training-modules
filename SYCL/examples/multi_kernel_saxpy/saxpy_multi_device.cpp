@@ -2,7 +2,7 @@
 // University of Florida
 //
 // saxpy_multi_device.cpp
-// // This SYCL program will create a parallel (vectorized) version of the following
+// This SYCL program will create a parallel (vectorized) version of the following
 // sequential code:
 //
 // for (int i=0; i < VECTOR_SIZE; i++)
@@ -14,7 +14,7 @@
 // explanation purposes.
 //
 // Although splitting kernels across devices can be an effective optimization,
-// the expensivecommunication between devices needs to be amortized across a large
+// the expensive communication between devices needs to be amortized across a large
 // amount of computation. In this example, each kernel performs a single add
 // or multiply, which would almost always be better to "fuse" into a single
 // kernel.
