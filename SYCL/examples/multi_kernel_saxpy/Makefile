@@ -1,4 +1,4 @@
-objects = saxpy_multi_kernel saxpy_multi_device1 saxpy_multi_device2
+objects = saxpy_multi_kernel saxpy_multi_device saxpy_scatter
 
 all: $(objects)
 
