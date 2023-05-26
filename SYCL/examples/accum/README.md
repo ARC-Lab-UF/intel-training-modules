@@ -1,28 +1,26 @@
 # Accumulation
 
-This example demonstrates how to parallelize accumaltion, while also showing numerous common race conditions and optimization strategies.
-This examples illustrates the most common techniques used many applications and should be studied in detail.
+This example demonstrates how to parallelize accumulation, while also showing numerous common race conditions and optimization strategies.
+The code illustrates common techniques used in many applications and should be studied in detail.
 
 The psuedo-code for accumulation is:
-
-
 
     int accum = 0;
     for (int i=0; i < VECTOR_SIZE; i++)
     	accum += x[i];
 
 Despite looking conceptually simple, this is actually by far the hardest example we have seen so far. Accumulation is an example of a "reduction"
-operation, that takes a large number of inputs and "reduces" them (in this case by adding) into a single input.
+operation, which takes a large number of inputs and "reduces" them (in this case by adding) into a single output.
 
-Parallel reduction code can look very intimidating without an understaning of the basic strategies. It is highly recommended that you read
+Parallel reduction code can look very intimidating without an understanding of the basic strategies. It is highly recommended that you read
 the provided slides before looking over the code. These slides visualize what is going on in each presented strategy.
 
 IMPORTANT: Make sure to read through all comments for an explanation of the code.
 
 1. [accum_strategy1_bad.cpp](accum_strategy1_bad.cpp)
    - Implements Strategy 1 from the slides.
-   - This is a commonly attempted incorrect approach. However, we will leverage parts of it in later strategies/
-   - Test this example with a small input size (e.g. 100). Note that it succeeds (or at least likely does)
+   - This is a commonly attempted incorrect approach. However, it is still important because we will leverage parts of it in later strategies.
+   - Test this example with a small input size (e.g. 100). Note that it succeeds (or at least likely does).
    - Test it again with a larger input size (anything over 1000), and it should fail. This is a common problem.
    - KEY POINT: Just because you aren't getting errors, doesn't mean your code is correct.
 1. [accum_strategy2_bad.cpp](accum_strategy2_bad.cpp)
@@ -52,7 +50,7 @@ IMPORTANT: Make sure to read through all comments for an explanation of the code
 1. [accum_strategy5.cpp](accum_strategy5.cpp)
    - Implements Strategy 5, which avoids a separate output vector by adding a stride to the array indexing.
    - Test this for 1B inputs and it should take around 40s.
-   - This Strateg by itself is terribly slow, but is useful when integrated with the next strategy.
+   - This strategy by itself is terribly slow, but is useful when integrated with the next strategy.
 1. [accum_strategy6_1_bad.cpp](accum_strategy6_1_bad.cpp)
    - Implements Strategy 6, which is generally the ideal approach for reduction.
    - Demonstrates work-groups, local memory, and synchronization within work-groups.
