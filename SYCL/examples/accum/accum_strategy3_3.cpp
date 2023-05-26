@@ -1,7 +1,7 @@
 // Greg Stitt
 // University of Florida
 //
-// accum_stratey3_3.cpp
+// accum_strategy3_3.cpp
 //
 // This SYCL program will create a parallel (vectorized) version of the following
 // sequential code:
