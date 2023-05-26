@@ -1,4 +1,4 @@
-objects = accum_strategy1_bad
+objects = accum_strategy1_bad accum_strategy2_bad
 
 all: $(objects)
 
