@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get vector size from command line.
-  int vector_size;
+  size_t vector_size;
   vector_size = atoi(argv[1]);
 
   if (vector_size <= 0) {
