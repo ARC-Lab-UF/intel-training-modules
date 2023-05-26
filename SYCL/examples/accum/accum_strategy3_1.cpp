@@ -22,7 +22,7 @@
 // The end result is a correct implementation. However, it is very slow,
 // which we improve in the next examples.
 //
-// When running the example on the DevCloud, the execution time of this example
+// When running on the DevCloud, the execution time of this example
 // for 1000000000 (1 billion) inputs was 84.85s.
 
 #include <iostream>

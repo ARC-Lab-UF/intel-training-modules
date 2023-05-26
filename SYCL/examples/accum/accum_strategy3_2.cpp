@@ -13,7 +13,7 @@
 // In this example, we optimize the previous example by minimizing the amount
 // of data that is transferred between the host and device.
 //
-// When running the example on the DevCloud, the execution time of this example
+// When running on the DevCloud, the execution time of this example
 // for 1000000000 (1 billion) inputs was 13.7s.
 
 #include <iostream>

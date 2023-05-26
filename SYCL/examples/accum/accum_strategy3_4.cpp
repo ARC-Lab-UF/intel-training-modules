@@ -13,7 +13,7 @@
 // This example further optimizes the previous example by minimizing the number of 
 // work-items each iteration.
 //
-// When running the example on the DevCloud, the execution time of this example
+// When running on the DevCloud, the execution time of this example
 // for 1000000000 (1 billion) inputs was 4.45s.
 
 #include <iostream>
