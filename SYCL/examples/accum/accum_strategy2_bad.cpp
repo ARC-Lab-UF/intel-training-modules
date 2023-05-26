@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     // work-item in each iteration by waiting for all of them to finish. This
     // ensures that no work-item starts a new iteration until all other work-items
     // have finished the current iteration.
-    for (int inputs_remaining = vector_size; inputs_remaining > 1; inputs_remaining = ceil(inputs_remaining / 2.0)) {
+    for (size_t inputs_remaining = vector_size; inputs_remaining > 1; inputs_remaining = ceil(inputs_remaining / 2.0)) {
       
       cl::sycl::buffer<int, 1> x_buf {x_h.data(), cl::sycl::range<1>(inputs_remaining) };
       
