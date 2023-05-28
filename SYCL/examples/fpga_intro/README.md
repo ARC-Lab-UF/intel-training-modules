@@ -5,8 +5,8 @@ This example shows the basics of how to write SYCL code targeting FPGAs, using t
     for (int i=0; i < VECTOR_SIZE; i++)
         z[i] = a * x[i] + y[i];
 
-FPGAs are a unique architecture and often benefits from different types of parallelism that GPUs and CPUs. Whereas those
-architecture are generally optimized for vectorization or SIMD/SIMT parallelism, FPGAs often perform better when
+FPGAs are a unique architecture and often benefit from different types of parallelism than GPUs and CPUs. Whereas those
+architectures are generally optimized for vectorization or SIMD/SIMT parallelism, FPGAs often perform better when
 exploiting "deep" pipeline parallelism. FPGAs are capable of vectorization also, but pipelining is usually a better
 strategy when an application is amenable to pipelining.
 
