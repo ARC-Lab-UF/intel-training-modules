@@ -1,6 +1,6 @@
 # Introduction
 
-These repository provides a tutorial on SYCL and DPC++. The provided examples are designed to work on the Intel DevCloud, but can also be performed by installing the necessary tools locally.
+This repository provides a tutorial on SYCL and DPC++. The provided examples are designed to work on the Intel DevCloud, but can also be performed by installing the necessary tools locally.
 
 The tutorial assumes you have some experience with C++, but includes an overview of recent constructs that are leveraged within SYCL (e.g, lambas).
 
@@ -45,27 +45,31 @@ Once logged onto a node, you can execute these examples by following the example
     - Description: Extends the SAXPY example to execute on multiple kernels, and then shows how to execute each kernel on a different device.
     - Demonstrates how to communicate and synchronize between multiple kernels, how to map different kernels onto different devices, and different parallelization strategies.
     - NOTE: using multiple kernels for SAXPY is largely artificial and intended for illustration only. The demonstrated concepts are intended to be applied to larger examples.
-1. [Example: Matrix Add](examples/matrix_add)
-    - Description: addition of two matrices. 
-    - Demonstrates problematic issues when working with multi-dimensional data.
-    - Compares several strategies when using statically and dynamically sized matrices.    
-1. [Example: FPGA SAXPY]()
-    - Description: Demonstrates how to specialize the earlier SAXPY example for field-programmable gate arrays (FPGAs).
 1. [Example: Accumulation](examples/accum)
     - Description: Accumulates the values from a provided vector/array.
     - Demonstrates 6 different accumulation strategies.
     - Demonstrates common synchronization mistakes and race condidtions.
     - Demonstrates use of work-groups and local memory.
     - Final example demonstrates basics you should know for most realistic heterogeneous parallel programs.
-1. [Example: USM vs. Buffers/Allocators](examples/accum)
+1. [Example: Matrix Add](examples/matrix_add)
+    - Description: addition of two matrices. 
+    - Demonstrates problematic issues when working with multi-dimensional data.
+    - Compares several strategies when using statically and dynamically sized matrices.    
+1. [Example: USM](examples/usm)
     - Description: Compares SYCL two communication methods: Unified Shared Memory (USM) and Buffers/Allocators.
-    - Analyzes tradeoffs of both approaches.
+    - Analyzes tradeoffs of both approaches
+1. [Example: FPGA Introduction](fpga_intro)
+    - Description: Demonstrates how to specialize the earlier SAXPY example for field-programmable gate arrays (FPGAs).
+
+<!---
+## Future Examples:
 1. [Example: Profiling]()
     - Description: Demonstrates how to profile and benchmark examples using C++ and built-in SYCL constructs.
 1. [Example: Advanced FPGA Examples]()
     - Description:TODO.
 1. [Example: Avdvanced Multi-Device Examples]()
     - Description:TODO.   
+--->
 
 # [DevCloud Instructions](https://github.com/ARC-Lab-UF/intel-training-modules#devcloud-instructions)
 
