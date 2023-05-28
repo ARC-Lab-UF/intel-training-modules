@@ -12,9 +12,13 @@ This tutorial assumes you already have a DevCloud account. To execute the includ
 
 `qsub -I -l nodes=1:gen9:ppn=2`
 
-In general, you can search for available nodes with various properties (e.g., Gen9 CPU) using the following:
+or, for the FPGA examples:
 
-`pbsnodes | grep -B 1 -A 8 "state = free" | grep -B 4 -A 4 gen9`
+`qsub -I -l nodes=1:fpga:ppn=2`
+
+In general, you can search for available nodes with various properties (e.g., fpga) using the following:
+
+`pbsnodes | grep -B 1 -A 8 "state = free" | grep -B 4 -A 4 fpga`
 
 This provides a list of available nodes. You can then manually log into one using the following (using node s001-n234 as an example):
 
