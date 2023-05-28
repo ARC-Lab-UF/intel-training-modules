@@ -62,7 +62,7 @@ Once logged onto a node, you can execute these examples by following the example
 1. [Example: USM](examples/usm)
     - Description: Compares SYCL two communication methods: Unified Shared Memory (USM) and Buffers/Allocators.
     - Analyzes tradeoffs of both approaches
-1. [Example: FPGA Introduction](fpga_intro)
+1. [Example: FPGA Introduction](examples/fpga_intro)
     - Description: Demonstrates how to specialize the earlier SAXPY example for field-programmable gate arrays (FPGAs).
 
 <!---
