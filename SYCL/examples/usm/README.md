@@ -12,7 +12,7 @@ IMPORTANT: Make sure to read through all comments for an explanation of the code
 1.  [usm_vs_buffers2.cpp](usm_vs_buffers2.cpp)
     - Modification to previous example where we intentionally only read 1 output.
     - While artificial here, this is common for reduction applications.
-    - This example demosntrates that some implicit methods potentially read more outputs than necessary.
+    - This example demonstrates that some implicit methods potentially read more outputs than necessary.
     
 ## Compilation and Execution Instructions
 
