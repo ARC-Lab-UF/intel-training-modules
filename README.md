@@ -10,6 +10,8 @@ Here is an [overview of the Intel PAC](https://www.youtube.com/watch?v=HatHuLtZ5
     - Description: Explanation for how to develop RTL code for the Intel PAC
 1. [FPGA timing optimization](timing/)
     - Description: Explanation for how to perform FPGA timing optimization.
+1. [SYCL Tutorial](SYCL/)
+    - Description: Tutorial on how to develop parallel applications using SYCL for FPGAs, GPUs, and CPUs.
      
 # DevCloud Instructions
 
